@@ -52,9 +52,8 @@ const OTPInput = ({
     return (
       <View
         key={index}
-        className={`w-12 h-14 border-2 rounded-lg justify-center items-center mx-1 ${
-          isInputBoxFocused && isValueFocused ? "border-yellow-500" : "border-gray-300"
-        } ${digit ? "bg-gray-50" : "bg-white"}`}
+        className={`w-12 h-14 border-2 rounded-lg justify-center items-center mx-1 ${isInputBoxFocused && isValueFocused ? "border-yellow-500" : "border-gray-300"
+          } ${digit ? "bg-gray-50" : "bg-white"}`}
       >
         <Text className="text-xl font-bold text-gray-800">{digit}</Text>
       </View>
@@ -98,7 +97,7 @@ const VerifyEmailScreen = () => {
   const [resendDisabled, setResendDisabled] = useState(false)
   const [countdown, setCountdown] = useState(60)
   const [fadeAnim] = useState(new Animated.Value(0))
-
+  const otpSent = useRef(false);
   // Debugging: log email yang diterima
   useEffect(() => {
     console.log("Email from route params:", email)
@@ -113,23 +112,16 @@ const VerifyEmailScreen = () => {
     }
   }, [route.params])
 
+  // Ubah useEffect untuk regenerateOTP
   useEffect(() => {
-    // Regenerate OTP ketika email tersedia
-    if (userEmail) {
-      console.log("Regenerating OTP for email:", userEmail)
-      dispatch(regenerateOTP(userEmail))
-        .unwrap()
-        .then(() => {
-          console.log("OTP regenerated successfully")
-        })
-        .catch((err) => {
-          console.error("Failed to regenerate OTP:", err)
-        })
-    } else {
-      console.warn("Cannot regenerate OTP: Email is empty")
+    if (route.params?.email) {
+      console.log("Email from route params:", route.params.email);
+      setUserEmail(route.params.email);
+      // Hapus auto regenerate OTP, biarkan user klik tombol manual
     }
-  }, [userEmail])
+  }, []);
 
+  // Dependency array kosong agar hanya dijalankan sekali
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -202,7 +194,15 @@ const VerifyEmailScreen = () => {
     <LinearGradient colors={["#FFB800", "#FF8A00"]} className="flex-1">
       <SafeAreaView className="flex-1">
         <View className="p-4 flex-row items-center">
-          <TouchableOpacity className="p-2" onPress={() => navigation.goBack()}>
+          <TouchableOpacity className="p-2" onPress={() => {
+            // Cek apakah ada halaman sebelumnya
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              // Jika tidak ada halaman sebelumnya, arahkan ke halaman Login
+              navigation.navigate("Login");
+            }
+          }}>
             <ArrowLeft size={24} color="white" />
           </TouchableOpacity>
           <Text className="text-2xl font-bold text-white ml-2">VERIFIKASI EMAIL</Text>
