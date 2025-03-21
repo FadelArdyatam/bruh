@@ -1,0 +1,162 @@
+import axios from "axios"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+
+const API_URL = "https://demo.sosiogrow.my.id/api/v1"
+
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  },
+})
+
+// Add a request interceptor to add the token to all requests
+api.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem("token")
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  },
+)
+
+// Register user
+const register = async (userData: any) => {
+  try {
+    const response = await api.post("/register", userData)
+    return response.data
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Registration failed")
+    }
+    throw new Error("Network error. Please check your connection.")
+  }
+}
+
+// Verify email with OTP
+const verifyEmail = async (data: { email: string; otp_code: string }) => {
+  try {
+    const response = await api.post("/verify-email-otp", data)
+    return response.data
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Email verification failed")
+    }
+    throw new Error("Network error. Please check your connection.")
+  }
+}
+
+// Verify OTP (new method)
+const verifyOTP = async (email: string, otp: string) => {
+  try {
+    const response = await api.post("/verify-email-otp", { email, otp_code: otp })
+    return response.data
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "OTP verification failed")
+    }
+    throw new Error("Network error. Please check your connection.")
+  }
+}
+
+// Regenerate OTP
+const regenerateOTP = async (email: string) => {
+  try {
+    const response = await api.post("/regenerate-otp", { email })
+    return response.data
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "OTP regeneration failed")
+    }
+    throw new Error("Network error. Please check your connection.")
+  }
+}
+
+// Login user
+const login = async (credentials: { username: string; password: string }) => {
+  try {
+    const response = await api.post("/login", credentials)
+
+    if (response.data.token) {
+      await AsyncStorage.setItem("token", response.data.token)
+      await AsyncStorage.setItem("user", JSON.stringify(response.data.user))
+    }
+
+    return response.data
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Login failed")
+    }
+    throw new Error("Network error. Please check your connection.")
+  }
+}
+
+// Forgot password
+const forgotPassword = async (email: string) => {
+  try {
+    const response = await api.post("/forgot-password", { email })
+    return response.data
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Password reset request failed")
+    }
+    throw new Error("Network error. Please check your connection.")
+  }
+}
+
+// Change password
+const changePassword = async (data: { current_password: string; new_password: string }, token: string) => {
+  try {
+    const response = await api.post("/change-password", data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (response.data.token) {
+      await AsyncStorage.setItem("token", response.data.token)
+    }
+
+    return response.data
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Password change failed")
+    }
+    throw new Error("Network error. Please check your connection.")
+  }
+}
+
+// Logout user
+const logout = async () => {
+  await AsyncStorage.removeItem("token")
+  await AsyncStorage.removeItem("user")
+}
+
+// Check if user is logged in
+const checkAuthStatus = async () => {
+  const user = await AsyncStorage.getItem("user")
+  const token = await AsyncStorage.getItem("token")
+
+  return user && token ? { user: JSON.parse(user), token } : null
+}
+
+const authService = {
+  register,
+  verifyEmail,
+  verifyOTP,
+  regenerateOTP,
+  login,
+  forgotPassword,
+  changePassword,
+  logout,
+  checkAuthStatus,
+}
+
+export default authService
+
