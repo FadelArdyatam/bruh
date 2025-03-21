@@ -2,6 +2,7 @@ import { createStackNavigator } from "@react-navigation/stack"
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { useSelector } from "react-redux"
 import type { RootState } from "../redux/store"
+import { NavigationContainer } from "@react-navigation/native"
 import { View, Text, Platform } from "react-native"
 import { Home, User, Activity, BarChart3, Settings } from "lucide-react-native"
 
@@ -92,33 +93,48 @@ const AppTabs = () => {
 }
 
 const AppNavigator = () => {
-  const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth)
+  const { isAuthenticated, isLoading, pendingVerification, pendingEmail } = useSelector((state: RootState) => state.auth)
+
+  console.log("Auth state:", { isAuthenticated, isLoading, pendingVerification, pendingEmail });
 
   if (isLoading) {
-    // You could return a splash screen here
+    // Return splash screen or loading indicator here
     return null
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
-        // Auth Stack
-        <>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
-          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-        </>
-      ) : (
-        // Main App Stack
-        <>
-          <Stack.Screen name="MainApp" component={AppTabs} />
-          <Stack.Screen name="PersonalData" component={PersonalDataScreen} />
-          <Stack.Screen name="FoodRecall" component={FoodRecallScreen} />
-          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-        </>
-      )}
-    </Stack.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {isAuthenticated ? (
+          // Main App Stack - User is authenticated
+          <>
+            <Stack.Screen name="MainApp" component={AppTabs} />
+            <Stack.Screen name="PersonalData" component={PersonalDataScreen} />
+            <Stack.Screen name="FoodRecall" component={FoodRecallScreen} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+          </>
+        ) : (
+          // Auth Stack - User is not authenticated
+          <>
+            {pendingVerification && pendingEmail ? (
+              // Show VerifyEmail first if registration is pending verification
+              <>
+                <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} initialParams={{ email: pendingEmail }} />
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+              </>
+            ) : (
+              // Normal auth flow - Login first
+              <>
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+              </>
+            )}
+          </>
+        )}
+      </Stack.Navigator>
   )
 }
 

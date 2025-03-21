@@ -88,31 +88,47 @@ const OTPInput = ({
 const VerifyEmailScreen = () => {
   const navigation = useNavigation<StackNavigationProp<any>>()
   const route = useRoute<RouteProp<RouteParams, "VerifyEmail">>()
-  const { email = "" } = route.params || {} // Add fallback for missing params
+  const { email = "" } = route.params || {} // Fallback untuk mencegah params undefined
   const dispatch = useDispatch<AppDispatch>()
   const { isLoading, error } = useSelector((state: RootState) => state.auth)
 
   const [otp, setOtp] = useState("")
-  const [userEmail, setUserEmail] = useState(email) // Store email in component state
+  const [userEmail, setUserEmail] = useState(email) // Store email dari parameter navigasi
   const [isPinReady, setIsPinReady] = useState(false)
   const [resendDisabled, setResendDisabled] = useState(false)
   const [countdown, setCountdown] = useState(60)
   const [fadeAnim] = useState(new Animated.Value(0))
 
-  // Add fallback for missing email
+  // Debugging: log email yang diterima
+  useEffect(() => {
+    console.log("Email from route params:", email)
+    console.log("Current userEmail state:", userEmail)
+  }, [email, userEmail])
+
+  // Jika email tidak tersedia dari route.params, coba ambil dari params lainnya
   useEffect(() => {
     if (!userEmail && route.params?.email) {
+      console.log("Setting userEmail from route.params:", route.params.email)
       setUserEmail(route.params.email)
     }
   }, [route.params])
 
   useEffect(() => {
-    // If email is provided via navigation params, use it
-    if (route.params?.email) {
-      // Dispatch regenerateOTP to ensure a fresh OTP is sent for verification
-      dispatch(regenerateOTP(route.params.email))
+    // Regenerate OTP ketika email tersedia
+    if (userEmail) {
+      console.log("Regenerating OTP for email:", userEmail)
+      dispatch(regenerateOTP(userEmail))
+        .unwrap()
+        .then(() => {
+          console.log("OTP regenerated successfully")
+        })
+        .catch((err) => {
+          console.error("Failed to regenerate OTP:", err)
+        })
+    } else {
+      console.warn("Cannot regenerate OTP: Email is empty")
     }
-  }, [route.params?.email])
+  }, [userEmail])
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -146,7 +162,7 @@ const VerifyEmailScreen = () => {
     }
 
     try {
-      // Use verifyOTP instead of verifyEmail
+      console.log("Verifying OTP for email:", userEmail, "with OTP:", otp)
       await dispatch(verifyOTP({ email: userEmail, otp: otp })).unwrap()
       Alert.alert(
         "Verifikasi Berhasil",
@@ -249,4 +265,3 @@ const VerifyEmailScreen = () => {
 }
 
 export default VerifyEmailScreen
-

@@ -8,6 +8,8 @@ interface AuthState {
   token: string | null
   isLoading: boolean
   error: string | null
+  pendingVerification: boolean // tambahkan state ini untuk melacak user yang belum verifikasi
+  pendingEmail: string | null // tambahkan state ini untuk menyimpan email yang perlu diverifikasi
 }
 
 const initialState: AuthState = {
@@ -16,12 +18,15 @@ const initialState: AuthState = {
   token: null,
   isLoading: true, // Start with loading to check auth status
   error: null,
+  pendingVerification: false,
+  pendingEmail: null
 }
 
-export const registerUser = createAsyncThunk("auth/register", async (userData: any, { rejectWithValue }) => {
+export const registerUser = createAsyncThunk("auth/register", async (userData: any, { rejectWithValue, dispatch }) => {
   try {
     const response = await authService.register(userData)
-    // Don't automatically set auth state here, let the VerifyEmail handle that
+    // Set pendingVerification dan pendingEmail saat registrasi berhasil
+    dispatch(setPendingVerification({ pending: true, email: userData.email }))
     return response
   } catch (error: any) {
     return rejectWithValue(error.message || "Registration failed")
@@ -30,9 +35,11 @@ export const registerUser = createAsyncThunk("auth/register", async (userData: a
 
 export const verifyEmail = createAsyncThunk(
   "auth/verifyEmail",
-  async (data: { email: string; otp_code: string }, { rejectWithValue }) => {
+  async (data: { email: string; otp_code: string }, { rejectWithValue, dispatch }) => {
     try {
       const response = await authService.verifyEmail(data)
+      // Reset pendingVerification ketika verifikasi berhasil
+      dispatch(setPendingVerification({ pending: false, email: null }))
       return response
     } catch (error: any) {
       return rejectWithValue(error.message || "Email verification failed")
@@ -42,14 +49,21 @@ export const verifyEmail = createAsyncThunk(
 
 export const verifyOTP = createAsyncThunk(
   "auth/verifyOTP",
-  async ({ email, otp }: { email: string; otp: string }, { rejectWithValue }) => {
+  async ({ email, otp }: { email: string; otp: string }, { rejectWithValue, dispatch }) => {
     try {
+      console.log(`Verifying OTP: email=${email}, otp=${otp}`)
       const response = await authService.verifyOTP(email, otp)
+      console.log("OTP verification response:", response)
+      
+      // Reset pendingVerification ketika verifikasi berhasil
+      dispatch(setPendingVerification({ pending: false, email: null }))
+      
       return {
         message: response.message,
         email: email,
       }
     } catch (error: any) {
+      console.error("OTP verification error:", error)
       return rejectWithValue(error.message || "OTP verification failed")
     }
   },
@@ -57,9 +71,12 @@ export const verifyOTP = createAsyncThunk(
 
 export const regenerateOTP = createAsyncThunk("auth/regenerateOTP", async (email: string, { rejectWithValue }) => {
   try {
+    console.log(`Regenerating OTP for email: ${email}`)
     const response = await authService.regenerateOTP(email)
+    console.log("OTP regeneration response:", response)
     return response
   } catch (error: any) {
+    console.error("OTP regeneration error:", error)
     return rejectWithValue(error.message || "OTP regeneration failed")
   }
 })
@@ -137,6 +154,10 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
+    setPendingVerification: (state, action) => {
+      state.pendingVerification = action.payload.pending
+      state.pendingEmail = action.payload.email
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -147,10 +168,12 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false
+        state.pendingVerification = true
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload as string
+        state.pendingVerification = false
       })
       // Verify Email
       .addCase(verifyEmail.pending, (state) => {
@@ -159,6 +182,8 @@ const authSlice = createSlice({
       })
       .addCase(verifyEmail.fulfilled, (state) => {
         state.isLoading = false
+        state.pendingVerification = false
+        state.pendingEmail = null
       })
       .addCase(verifyEmail.rejected, (state, action) => {
         state.isLoading = false
@@ -171,6 +196,8 @@ const authSlice = createSlice({
       })
       .addCase(verifyOTP.fulfilled, (state) => {
         state.isLoading = false
+        state.pendingVerification = false
+        state.pendingEmail = null
       })
       .addCase(verifyOTP.rejected, (state, action) => {
         state.isLoading = false
@@ -198,6 +225,8 @@ const authSlice = createSlice({
         state.isAuthenticated = true
         state.user = action.payload.user
         state.token = action.payload.token
+        state.pendingVerification = false
+        state.pendingEmail = null
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false
@@ -233,6 +262,8 @@ const authSlice = createSlice({
         state.isAuthenticated = false
         state.user = null
         state.token = null
+        state.pendingVerification = false
+        state.pendingEmail = null
       })
       // Check Auth Status
       .addCase(checkAuthStatus.fulfilled, (state, action) => {
@@ -249,7 +280,7 @@ const authSlice = createSlice({
   },
 })
 
-export const { setLoading, clearError } = authSlice.actions
+export const { setLoading, clearError, setPendingVerification } = authSlice.actions
 
 // Add this exported selector to help with debugging auth state
 export const selectAuthState = (state: { auth: AuthState }) => ({
@@ -257,7 +288,8 @@ export const selectAuthState = (state: { auth: AuthState }) => ({
   isLoading: state.auth.isLoading,
   error: state.auth.error,
   user: state.auth.user,
+  pendingVerification: state.auth.pendingVerification,
+  pendingEmail: state.auth.pendingEmail,
 })
 
 export default authSlice.reducer
-

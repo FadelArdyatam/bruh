@@ -122,20 +122,17 @@ const RegisterScreen = () => {
     if (!validateForm()) return
 
     try {
-      const result = await dispatch(registerUser(formData)).unwrap()
-
-      console.log("Registration result:", result)
-      // Show alert first, then navigate to verification screen when user clicks the button
-      Alert.alert("Pendaftaran Berhasil", "Silahkan masukkan kode verifikasi yang dikirim ke email Anda", [
-        {
-          
-          text: "Verifikasi Email",
-          onPress: () => {
-            console.log("Navigating to VerifyEmail")
-            navigation.navigate("VerifyEmail", { email: formData.email })
-          },
-        },
-      ])
+      await dispatch(registerUser(formData)).unwrap()
+      
+      // Tampilkan alert tapi tidak menunggu user menekan tombol untuk navigasi
+      Alert.alert(
+        "Pendaftaran Berhasil", 
+        "Silahkan masukkan kode verifikasi yang dikirim ke email Anda"
+      )
+      
+      // Navigasi langsung ke halaman verifikasi email
+      navigation.navigate("VerifyEmail", { email: formData.email })
+      
     } catch (err) {
       console.error("Registration failed:", err)
     }
@@ -339,4 +336,3 @@ const RegisterScreen = () => {
 }
 
 export default RegisterScreen
-
