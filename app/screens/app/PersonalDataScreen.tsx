@@ -150,10 +150,7 @@ const PersonalDataScreen = () => {
       if (needsProfileSetup) {
         dispatch({ type: 'auth/setupProfileComplete' });
         // Navigasi ke halaman utama
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'MainApp' }],
-        });
+        console.log("Navigating to MainApp")
       } else {
         // Kembali ke halaman sebelumnya jika hanya update profil biasa
         Alert.alert("Sukses", "Data personil berhasil disimpan", [

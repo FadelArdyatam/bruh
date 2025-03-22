@@ -129,11 +129,18 @@ export const checkAuthStatus = createAsyncThunk("auth/checkStatus", async (_, { 
   try {
     const userData = await AsyncStorage.getItem("user")
     const token = await AsyncStorage.getItem("token")
+    const profileCompleted = await AsyncStorage.getItem("profileCompleted")
 
     if (userData && token) {
+      const user = JSON.parse(userData);
+
+      //Muat status needsProfileSetup dari storage lokal
+      const needsSetup = profileCompleted !== "true";
+
       return {
         user: JSON.parse(userData),
         token,
+        needsProfileSetup: needsSetup
       }
     }
     return null
@@ -162,6 +169,8 @@ const authSlice = createSlice({
     },
     setupProfileComplete: (state) => {
       state.needsProfileSetup = false;
+      // simpan status di storage lokal
+      AsyncStorage.setItem("profileCompleted", "true")
     }
   },
   extraReducers: (builder) => {
@@ -236,9 +245,11 @@ const authSlice = createSlice({
         //cek apakah data profil pengguna sudah lenkap?
         if(!action.payload.user.tinggi_badan || ! action.payload.user.id_pangkat){
           state.needsProfileSetup = true;
-          console.log("silahkan isi profile setup")
+          AsyncStorage.setItem("needsProfileSetup", "false");
+          console.log("silahkan isi profile setup");
         }else{
           state.needsProfileSetup = false;
+          AsyncStorage.setItem("profileCompleted", "true");
         }
 
       })
@@ -285,6 +296,9 @@ const authSlice = createSlice({
           state.isAuthenticated = true
           state.user = action.payload.user
           state.token = action.payload.token
+          // ambbbiill nilai needsSetup
+
+          state.needsProfileSetup = action.payload.needsProfileSetup;
         } else {
           state.isAuthenticated = false
           state.user = null

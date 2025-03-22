@@ -1,7 +1,8 @@
+import React, { useEffect } from "react"
 import { createStackNavigator } from "@react-navigation/stack"
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
-import { useSelector } from "react-redux"
-import type { RootState } from "../redux/store"
+import { useSelector, useDispatch } from "react-redux"
+import type { RootState, AppDispatch } from "../redux/store"
 import { NavigationContainer } from "@react-navigation/native"
 import { View, Text, Platform } from "react-native"
 import { Home, User, Activity, BarChart3, Settings } from "lucide-react-native"
@@ -24,6 +25,8 @@ import ChangePasswordScreen from "../screens/app/ChangePasswordScreen"
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
+const AuthStack = createStackNavigator()
+const AppStack = createStackNavigator()
 
 const TabIcon = ({ icon: Icon, focused, label }: { icon: any; focused: boolean; label: string }) => (
   <View className="items-center justify-center">
@@ -32,7 +35,8 @@ const TabIcon = ({ icon: Icon, focused, label }: { icon: any; focused: boolean; 
   </View>
 )
 
-const AppTabs = () => {
+// Tab navigator yang berisi menu utama aplikasi
+const TabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -54,35 +58,35 @@ const AppTabs = () => {
       }}
     >
       <Tab.Screen
-        name="Home"
+        name="HomeTab"
         component={HomeScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon={Home} focused={focused} label="Beranda" />,
         }}
       />
       <Tab.Screen
-        name="IMT"
+        name="IMTTab"
         component={IMTScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon={BarChart3} focused={focused} label="IMT" />,
         }}
       />
       <Tab.Screen
-        name="TrainingProgram"
+        name="TrainingProgramTab"
         component={TrainingProgramScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon={Activity} focused={focused} label="Latihan" />,
         }}
       />
       <Tab.Screen
-        name="Profile"
+        name="ProfileTab"
         component={ProfileScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon={User} focused={focused} label="Profil" />,
         }}
       />
       <Tab.Screen
-        name="Settings"
+        name="SettingsTab"
         component={SettingsScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon={Settings} focused={focused} label="Pengaturan" />,
@@ -92,52 +96,80 @@ const AppTabs = () => {
   )
 }
 
-const AppNavigator = () => {
-  const { isAuthenticated, isLoading, pendingVerification, pendingEmail, needsProfileSetup } = useSelector((state: RootState) => state.auth)
+// Stack untuk proses autentikasi
+const AuthStackNavigator = () => {
+  const { pendingVerification, pendingEmail } = useSelector((state: RootState) => state.auth)
 
-  console.log("Auth state:", { isAuthenticated, isLoading, pendingVerification, pendingEmail, needsProfileSetup });
+  return (
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      {pendingVerification && pendingEmail ? (
+        // Tampilkan verifikasi email terlebih dahulu jika pendaftaran menunggu verifikasi
+        <>
+          <AuthStack.Screen 
+            name="VerifyEmail" 
+            component={VerifyEmailScreen} 
+            initialParams={{ email: pendingEmail }} 
+          />
+          <AuthStack.Screen name="Login" component={LoginScreen} />
+          <AuthStack.Screen name="Register" component={RegisterScreen} />
+          <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        </>
+      ) : (
+        // Alur auth normal - Login terlebih dahulu
+        <>
+          <AuthStack.Screen name="Login" component={LoginScreen} />
+          <AuthStack.Screen name="Register" component={RegisterScreen} />
+          <AuthStack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
+          <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        </>
+      )}
+    </AuthStack.Navigator>
+  )
+}
+
+// Stack untuk layar utama aplikasi
+const AppStackNavigator = () => {
+  return (
+    <AppStack.Navigator screenOptions={{ headerShown: false }}>
+      <AppStack.Screen name="Tabs" component={TabNavigator} />
+      <AppStack.Screen name="PersonalData" component={PersonalDataScreen} />
+      <AppStack.Screen name="FoodRecall" component={FoodRecallScreen} />
+      <AppStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+    </AppStack.Navigator>
+  )
+}
+
+// Navigator utama yang memilih antara autentikasi, pengaturan profil, atau aplikasi utama
+const RootNavigator = () => {
+  const { isAuthenticated, isLoading, needsProfileSetup } = useSelector((state: RootState) => state.auth)
+  
+  console.log("Auth state:", { isAuthenticated, isLoading, needsProfileSetup });
 
   if (isLoading) {
-    // Return splash screen or loading indicator here
+    // Tampilkan splash screen atau indikator loading
     return null
   }
 
+  // Pilih navigasi berdasarkan status autentikasi dan pengaturan profil
+  if (!isAuthenticated) {
+    return <AuthStackNavigator />
+  } else if (needsProfileSetup) {
+    // Tampilkan layar pengaturan profil
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="PersonalDataSetup" component={PersonalDataScreen} />
+      </Stack.Navigator>
+    )
+  } else {
+    // Tampilkan aplikasi utama
+    return <AppStackNavigator />
+  }
+}
+
+// Komponen navigator root yang membungkus semua navigasi
+const AppNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
-        // Auth Stack - User is not authenticated
-        <>
-          {pendingVerification && pendingEmail ? (
-            // Show VerifyEmail first if registration is pending verification
-            <>
-              <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} initialParams={{ email: pendingEmail }} />
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-            </>
-          ) : (
-            // Normal auth flow - Login first
-            <>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
-              <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-            </>
-          )}
-        </>
-      ) : needsProfileSetup ? (
-        // User is authenticated but needs to complete profile setup
-        <Stack.Screen name="PersonalData" component={PersonalDataScreen} />
-      ) : (
-        // Main App Stack - User is authenticated and profile is complete
-        <>
-          <Stack.Screen name="MainApp" component={AppTabs} />
-          <Stack.Screen name="PersonalData" component={PersonalDataScreen} />
-          <Stack.Screen name="FoodRecall" component={FoodRecallScreen} />
-          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-        </>
-      )}
-    </Stack.Navigator>
+      <RootNavigator />
   )
 }
 
