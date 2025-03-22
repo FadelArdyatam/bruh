@@ -305,6 +305,11 @@ const authSlice = createSlice({
         state.isLoading = false
         state.pendingVerification = false
         state.pendingEmail = null
+        state.needsProfileSetup = true
+
+        AsyncStorage.setItem("profileCompleted", "false").catch(error =>
+          console.error("Error menyimpan data profil", error)
+        )
       })
       .addCase(verifyOTP.rejected, (state, action) => {
         state.isLoading = false
