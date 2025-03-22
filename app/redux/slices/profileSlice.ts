@@ -24,8 +24,13 @@ const initialState: ProfileState = {
 export const getUserProfile = createAsyncThunk("profile/getUserProfile", async (_, { rejectWithValue }) => {
   try {
     const response = await userService.getUserProfile()
-    return response.user
+    // Logging untuk debug
+    console.log("getUserProfile response:", response)
+    
+    // Jika respons API langsung adalah data user (bukan response.user)
+    return response.data || response.user || response
   } catch (error: any) {
+    console.error("getUserProfile error:", error)
     return rejectWithValue(error.message)
   }
 })
@@ -35,7 +40,7 @@ export const updateUserProfile = createAsyncThunk(
   async (userData: any, { rejectWithValue }) => {
     try {
       const response = await userService.updateUserProfile(userData)
-      return response.user
+      return response.user || response.data || response
     } catch (error: any) {
       return rejectWithValue(error.message)
     }
@@ -99,10 +104,12 @@ const profileSlice = createSlice({
       .addCase(getUserProfile.fulfilled, (state, action) => {
         state.isLoading = false
         state.personalData = action.payload
+        console.log("Profile data updated in Redux:", action.payload)
       })
       .addCase(getUserProfile.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload as string
+        console.error("Profile data fetch rejected:", action.payload)
       })
       // Update User Profile
       .addCase(updateUserProfile.pending, (state) => {
@@ -174,4 +181,3 @@ const profileSlice = createSlice({
 
 export const { clearProfileError } = profileSlice.actions
 export default profileSlice.reducer
-

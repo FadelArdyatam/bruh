@@ -54,6 +54,14 @@ const ProfileScreen = () => {
     return age
   }
 
+  // Debug logs
+  console.log("PersonalData:", personalData)
+  
+  // Ekstrak data personel dari struktur respons API
+  const personelData = personalData?.personel || {}
+  const satuanKerja = personelData?.satuan_kerja || {}
+  const pangkat = personelData?.pangkat || {}
+
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -81,9 +89,9 @@ const ProfileScreen = () => {
             </View>
 
             <Text className="text-white text-xl font-bold mt-3">
-              {personalData?.nama_lengkap || user?.name || "Pengguna"}
+              {personelData.nama_lengkap || personalData?.name || user?.name || "Pengguna"}
             </Text>
-            <Text className="text-white opacity-80">{personalData?.pangkat?.nama_pangkat || "Belum ada pangkat"}</Text>
+            <Text className="text-white opacity-80">{pangkat?.nama_pangkat || "Belum ada pangkat"}</Text>
           </View>
         </LinearGradient>
 
@@ -109,8 +117,8 @@ const ProfileScreen = () => {
                 <View>
                   <Text className="text-gray-500 text-sm">Tanggal Lahir & Umur</Text>
                   <Text className="text-gray-800 font-medium">
-                    {personalData?.tanggal_lahir
-                      ? `${personalData.tanggal_lahir} (${calculateAge(personalData.tanggal_lahir)} tahun)`
+                    {personelData.tanggal_lahir
+                      ? `${personelData.tanggal_lahir} (${calculateAge(personelData.tanggal_lahir)} tahun)`
                       : "-"}
                   </Text>
                 </View>
@@ -122,7 +130,7 @@ const ProfileScreen = () => {
                 </View>
                 <View>
                   <Text className="text-gray-500 text-sm">Tempat Lahir</Text>
-                  <Text className="text-gray-800 font-medium">{personalData?.tempat_lahir || "-"}</Text>
+                  <Text className="text-gray-800 font-medium">{personelData.tempat_lahir || "-"}</Text>
                 </View>
               </View>
 
@@ -132,7 +140,7 @@ const ProfileScreen = () => {
                 </View>
                 <View>
                   <Text className="text-gray-500 text-sm">Nomor Handphone</Text>
-                  <Text className="text-gray-800 font-medium">{personalData?.no_hp || "-"}</Text>
+                  <Text className="text-gray-800 font-medium">{personelData.no_hp || "-"}</Text>
                 </View>
               </View>
 
@@ -153,7 +161,7 @@ const ProfileScreen = () => {
                 <View>
                   <Text className="text-gray-500 text-sm">Satuan Kerja</Text>
                   <Text className="text-gray-800 font-medium">
-                    {personalData?.satuan_kerja?.nama_satuan_kerja || "-"}
+                    {satuanKerja?.nama_satuan_kerja || "-"}
                   </Text>
                 </View>
               </View>
@@ -164,7 +172,7 @@ const ProfileScreen = () => {
                 </View>
                 <View>
                   <Text className="text-gray-500 text-sm">Jenis Pekerjaan</Text>
-                  <Text className="text-gray-800 font-medium">{personalData?.jenis_pekerjaan || "-"}</Text>
+                  <Text className="text-gray-800 font-medium">{personelData.jenis_pekerjaan || "-"}</Text>
                 </View>
               </View>
             </View>
@@ -207,6 +215,14 @@ const ProfileScreen = () => {
               <ChevronRight size={20} color="#9CA3AF" />
             </TouchableOpacity>
           </View>
+          
+          {/* Tombol Refresh untuk keperluan testing */}
+          <TouchableOpacity 
+            className="bg-blue-500 p-4 rounded-lg mb-6"
+            onPress={() => dispatch(getUserProfile())}
+          >
+            <Text className="text-white text-center font-medium">Refresh Data Profil</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -214,4 +230,3 @@ const ProfileScreen = () => {
 }
 
 export default ProfileScreen
-
