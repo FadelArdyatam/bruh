@@ -6,11 +6,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Image,
   ScrollView,
   Alert,
   ActivityIndicator,
   Animated,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native"
 import { useDispatch, useSelector } from "react-redux"
 import { registerUser, clearError } from "../../redux/slices/authSlice"
@@ -19,10 +21,9 @@ import type { AppDispatch, RootState } from "../../redux/store"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { ArrowLeft, Send, Calendar, ChevronDown } from "lucide-react-native"
+import { ArrowLeft, Send, Calendar, ChevronDown, Mail, Phone, MapPin, User, Briefcase, Shield } from "lucide-react-native"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { Picker } from "@react-native-picker/picker"
-import { LinearGradient } from "expo-linear-gradient"
 
 type FormData = {
   nama_lengkap: string
@@ -55,13 +56,13 @@ const RegisterScreen = () => {
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
   const [showSatuanKerjaPicker, setShowSatuanKerjaPicker] = useState(false)
   const [showChildSatuanKerjaPicker, setShowChildSatuanKerjaPicker] = useState(false)
-  const [formAnimation] = useState(new Animated.Value(0))
+  const [fadeAnimation] = useState(new Animated.Value(0))
 
   useEffect(() => {
     dispatch(clearError())
     dispatch(getParentSatuanKerja())
 
-    Animated.timing(formAnimation, {
+    Animated.timing(fadeAnimation, {
       toValue: 1,
       duration: 800,
       useNativeDriver: true,
@@ -124,13 +125,11 @@ const RegisterScreen = () => {
     try {
       await dispatch(registerUser(formData)).unwrap()
       
-      // Tampilkan alert tapi tidak menunggu user menekan tombol untuk navigasi
       Alert.alert(
         "Pendaftaran Berhasil", 
         "Silahkan masukkan kode verifikasi yang dikirim ke email Anda"
       )
       
-      // Navigasi langsung ke halaman verifikasi email
       navigation.navigate("VerifyEmail", { email: formData.email })
       
     } catch (err) {
@@ -138,178 +137,194 @@ const RegisterScreen = () => {
     }
   }
 
-  const formTranslateY = formAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [50, 0],
-  })
-
-  const formOpacity = formAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  })
+  const renderFieldWithIcon = (
+    label: string, 
+    value: string, 
+    placeholder: string, 
+    icon: React.ReactNode, 
+    onChangeText: (text: string) => void,
+    keyboardType: any = "default",
+    secureTextEntry: boolean = false
+  ) => (
+    <View className="mb-4">
+      <Text className="text-gray-700 mb-2 font-medium">{label}</Text>
+      <View className="flex-row items-center border-none  rounded-full px-3 bg-gray-50">
+        {icon}
+        <TextInput
+          className="flex-1 p-3"
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          keyboardType={keyboardType}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize="none"
+        />
+      </View>
+    </View>
+  )
 
   return (
-    <LinearGradient colors={["#FFB800", "#FF8A00"]} className="flex-1">
-      <SafeAreaView className="flex-1">
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? -64 : 0}
+    >
+      <SafeAreaView className="flex-1 bg-white">
         <View className="p-4 flex-row items-center">
           <TouchableOpacity className="p-2" onPress={() => navigation.goBack()}>
-            <ArrowLeft size={24} color="white" />
+            <ArrowLeft size={24} color="#FFB800" />
           </TouchableOpacity>
-          <Text className="text-2xl font-bold text-white ml-2">DAFTAR AKUN BARU</Text>
+          <Text className="text-xl font-bold text-gray-800 ml-2">DAFTAR AKUN BARU</Text>
         </View>
 
         <ScrollView className="flex-1">
-          <Animated.View
-            className="p-4"
-            style={{
-              opacity: formOpacity,
-              transform: [{ translateY: formTranslateY }],
-            }}
+          <Animated.View 
+            className="p-6"
+            style={{ opacity: fadeAnimation }}
           >
-            <View className="bg-white rounded-2xl p-6 mb-4 shadow-lg">
-              <Text className="text-xl font-bold text-gray-800 mb-6">Informasi Akun</Text>
+            {/* Illustration */}
+            <View className="items-center mb-6">
+              <Image 
+                source={{ uri: "https://cdn-icons-png.flaticon.com/512/3456/3456426.png" }} 
+                className="w-48 h-48" 
+                resizeMode="contain"
+              />
+              <Text className="text-2xl font-bold text-gray-800 mt-4">Lengkapi Profil Anda</Text>
+              <Text className="text-base text-gray-500 text-center">Informasi ini membantu kami mengenali Anda lebih baik</Text>
+            </View>
 
-              <View className="space-y-4">
-                <View>
-                  <Text className="text-gray-700 mb-2 font-medium">Nama Lengkap</Text>
-                  <TextInput
-                    className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                    value={formData.nama_lengkap}
-                    onChangeText={(text) => handleChange("nama_lengkap", text)}
-                    placeholder="Masukkan nama lengkap"
-                  />
-                </View>
+            {/* Form */}
+            <View className="mb-6">
+              {renderFieldWithIcon(
+                "Nama Lengkap", 
+                formData.nama_lengkap, 
+                "Masukkan nama lengkap", 
+                <User size={20} color="#666" />, 
+                (text) => handleChange("nama_lengkap", text)
+              )}
 
-                <View>
-                  <Text className="text-gray-700 mb-2 font-medium">NIP / NRP</Text>
-                  <TextInput
-                    className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                    value={formData.username}
-                    onChangeText={(text) => handleChange("username", text)}
-                    placeholder="Masukkan NIP/NRP"
-                    keyboardType="numeric"
-                  />
-                </View>
+              {renderFieldWithIcon(
+                "NIP / NRP", 
+                formData.username, 
+                "Masukkan NIP/NRP", 
+                <Shield size={20} color="#666" />, 
+                (text) => handleChange("username", text),
+                "numeric"
+              )}
 
-                <View>
-                  <Text className="text-gray-700 mb-2 font-medium">Email</Text>
-                  <TextInput
-                    className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                    value={formData.email}
-                    onChangeText={(text) => handleChange("email", text)}
-                    placeholder="Masukkan email"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
+              {renderFieldWithIcon(
+                "Email", 
+                formData.email, 
+                "Masukkan email", 
+                <Mail size={20} color="#666" />, 
+                (text) => handleChange("email", text),
+                "email-address"
+              )}
 
-                <View>
-                  <Text className="text-gray-700 mb-2 font-medium">No. Handphone</Text>
-                  <TextInput
-                    className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                    value={formData.no_hp}
-                    onChangeText={(text) => handleChange("no_hp", text)}
-                    placeholder="Masukkan nomor handphone"
-                    keyboardType="phone-pad"
-                  />
-                </View>
+              {renderFieldWithIcon(
+                "No. Handphone", 
+                formData.no_hp, 
+                "Masukkan nomor handphone", 
+                <Phone size={20} color="#666" />, 
+                (text) => handleChange("no_hp", text),
+                "phone-pad"
+              )}
 
-                <View>
-                  <Text className="text-gray-700 mb-2 font-medium">Tempat Lahir</Text>
-                  <TextInput
-                    className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                    value={formData.tempat_lahir}
-                    onChangeText={(text) => handleChange("tempat_lahir", text)}
-                    placeholder="Masukkan tempat lahir"
-                  />
-                </View>
+              {renderFieldWithIcon(
+                "Tempat Lahir", 
+                formData.tempat_lahir, 
+                "Masukkan tempat lahir", 
+                <MapPin size={20} color="#666" />, 
+                (text) => handleChange("tempat_lahir", text)
+              )}
 
-                <View>
-                  <Text className="text-gray-700 mb-2 font-medium">Tanggal Lahir</Text>
+              <View className="mb-4">
+                <Text className="text-gray-700 mb-2 font-medium">Tanggal Lahir</Text>
+                <TouchableOpacity
+                  className="flex-row items-center border-none  rounded-full px-3 py-3 bg-gray-50"
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Calendar size={20} color="#666" className="mr-3" />
+                  <Text className={formData.tanggal_lahir ? "text-gray-800" : "text-gray-400"}>
+                    {formData.tanggal_lahir ? formData.tanggal_lahir : "Pilih tanggal lahir"}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} />
+                )}
+              </View>
+
+              <View className="mb-4">
+                <Text className="text-gray-700 mb-2 font-medium">Satuan Kerja</Text>
+                <TouchableOpacity
+                  className="flex-row items-center border-none  rounded-full px-3 py-3 bg-gray-50"
+                  onPress={() => setShowSatuanKerjaPicker(true)}
+                >
+                  <Briefcase size={20} color="#666" className="mr-3" />
+                  <Text className={selectedParentId ? "text-gray-800" : "text-gray-400"}>
+                    {selectedParentId
+                      ? parentSatuanKerjaList.find((item) => item.id === selectedParentId)?.nama_satuan_kerja
+                      : "Pilih satuan kerja induk"}
+                  </Text>
+                  <ChevronDown size={20} color="#666" className="ml-auto" />
+                </TouchableOpacity>
+
+                {showSatuanKerjaPicker && (
+                  <View className="border-none  rounded-full mt-2 bg-white">
+                    <Picker
+                      selectedValue={selectedParentId}
+                      onValueChange={(itemValue) => {
+                        setSelectedParentId(itemValue)
+                        setShowSatuanKerjaPicker(false)
+                      }}
+                    >
+                      <Picker.Item label="Pilih satuan kerja induk" value={null} />
+                      {parentSatuanKerjaList.map((item) => (
+                        <Picker.Item key={item.id} label={item.nama_satuan_kerja} value={item.id} />
+                      ))}
+                    </Picker>
+                  </View>
+                )}
+              </View>
+
+              {selectedParentId && (
+                <View className="mb-4">
+                  <Text className="text-gray-700 mb-2 font-medium">Sub Satuan Kerja</Text>
                   <TouchableOpacity
-                    className="flex-row items-center border border-gray-300 rounded-lg p-3 bg-gray-50"
-                    onPress={() => setShowDatePicker(true)}
+                    className="flex-row items-center border-none  rounded-full px-3 py-3 bg-gray-50"
+                    onPress={() => setShowChildSatuanKerjaPicker(true)}
                   >
-                    <Text className={formData.tanggal_lahir ? "text-gray-800" : "text-gray-400"}>
-                      {formData.tanggal_lahir ? formData.tanggal_lahir : "Pilih tanggal lahir"}
-                    </Text>
-                    <Calendar size={20} color="#666" className="ml-auto" />
-                  </TouchableOpacity>
-                  {showDatePicker && (
-                    <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} />
-                  )}
-                </View>
-
-                <View>
-                  <Text className="text-gray-700 mb-2 font-medium">Satuan Kerja</Text>
-                  <TouchableOpacity
-                    className="flex-row items-center border border-gray-300 rounded-lg p-3 bg-gray-50"
-                    onPress={() => setShowSatuanKerjaPicker(true)}
-                  >
-                    <Text className={selectedParentId ? "text-gray-800" : "text-gray-400"}>
-                      {selectedParentId
-                        ? parentSatuanKerjaList.find((item) => item.id === selectedParentId)?.nama_satuan_kerja
-                        : "Pilih satuan kerja induk"}
+                    <Briefcase size={20} color="#666" className="mr-3" />
+                    <Text className={formData.id_satuankerja ? "text-gray-800" : "text-gray-400"}>
+                      {formData.id_satuankerja
+                        ? childSatuanKerjaList.find((item) => item.id === formData.id_satuankerja)?.nama_satuan_kerja
+                        : "Pilih sub satuan kerja"}
                     </Text>
                     <ChevronDown size={20} color="#666" className="ml-auto" />
                   </TouchableOpacity>
 
-                  {showSatuanKerjaPicker && (
-                    <View className="border border-gray-300 rounded-lg mt-2 bg-white">
+                  {showChildSatuanKerjaPicker && (
+                    <View className="border-none  rounded-full mt-2 bg-white">
                       <Picker
-                        selectedValue={selectedParentId}
+                        selectedValue={formData.id_satuankerja}
                         onValueChange={(itemValue) => {
-                          setSelectedParentId(itemValue)
-                          setShowSatuanKerjaPicker(false)
+                          handleChange("id_satuankerja", itemValue)
+                          setShowChildSatuanKerjaPicker(false)
                         }}
                       >
-                        <Picker.Item label="Pilih satuan kerja induk" value={null} />
-                        {parentSatuanKerjaList.map((item) => (
+                        <Picker.Item label="Pilih sub satuan kerja" value={null} />
+                        {childSatuanKerjaList.map((item) => (
                           <Picker.Item key={item.id} label={item.nama_satuan_kerja} value={item.id} />
                         ))}
                       </Picker>
                     </View>
                   )}
                 </View>
-
-                {selectedParentId && (
-                  <View>
-                    <Text className="text-gray-700 mb-2 font-medium">Sub Satuan Kerja</Text>
-                    <TouchableOpacity
-                      className="flex-row items-center border border-gray-300 rounded-lg p-3 bg-gray-50"
-                      onPress={() => setShowChildSatuanKerjaPicker(true)}
-                    >
-                      <Text className={formData.id_satuankerja ? "text-gray-800" : "text-gray-400"}>
-                        {formData.id_satuankerja
-                          ? childSatuanKerjaList.find((item) => item.id === formData.id_satuankerja)?.nama_satuan_kerja
-                          : "Pilih sub satuan kerja"}
-                      </Text>
-                      <ChevronDown size={20} color="#666" className="ml-auto" />
-                    </TouchableOpacity>
-
-                    {showChildSatuanKerjaPicker && (
-                      <View className="border border-gray-300 rounded-lg mt-2 bg-white">
-                        <Picker
-                          selectedValue={formData.id_satuankerja}
-                          onValueChange={(itemValue) => {
-                            handleChange("id_satuankerja", itemValue)
-                            setShowChildSatuanKerjaPicker(false)
-                          }}
-                        >
-                          <Picker.Item label="Pilih sub satuan kerja" value={null} />
-                          {childSatuanKerjaList.map((item) => (
-                            <Picker.Item key={item.id} label={item.nama_satuan_kerja} value={item.id} />
-                          ))}
-                        </Picker>
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
+              )}
             </View>
 
             <TouchableOpacity
-              className="bg-yellow-600 py-4 px-6 rounded-lg flex-row items-center justify-center shadow-md mb-6"
+              className="bg-yellow-500 py-4 px-6 rounded-full flex-row items-center justify-center shadow-md mb-6"
               onPress={handleSubmit}
               disabled={isLoading}
             >
@@ -317,21 +332,21 @@ const RegisterScreen = () => {
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <>
-                  <Text className="text-white font-bold text-lg mr-2">KIRIM</Text>
-                  <Send size={20} color="white" />
+                  <Text className="text-white font-bold text-lg">DAFTAR</Text>
                 </>
               )}
             </TouchableOpacity>
 
             {error && (
-              <View className="bg-red-100 p-4 rounded-lg mb-4">
+              <View className="bg-red-100 p-4 rounded-full mb-4">
                 <Text className="text-red-500 text-center">{error}</Text>
               </View>
             )}
+            
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </KeyboardAvoidingView>
   )
 }
 

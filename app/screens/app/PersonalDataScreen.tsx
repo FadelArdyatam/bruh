@@ -1,17 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from "react-native"
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  ScrollView, 
+  Alert, 
+  ActivityIndicator, 
+  Platform,
+  Image,
+  KeyboardAvoidingView,
+  Animated
+} from "react-native"
 import { useDispatch, useSelector } from "react-redux"
 import { getUserProfile, updateUserProfile, getAllPangkat, getAllSatuanKerja } from "../../redux/slices/profileSlice"
 import type { AppDispatch, RootState } from "../../redux/store"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Picker } from "@react-native-picker/picker"
-import { Save, ArrowLeft, Calendar, ChevronDown } from "lucide-react-native"
+import { Save, ArrowLeft, Calendar, ChevronDown, User, Mail, Phone, MapPin, Briefcase, Award, Ruler, Activity } from "lucide-react-native"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import { completeProfileSetup } from "~/app/redux/slices/authSlice"
+import { completeProfileSetup } from "../../redux/slices/authSlice"
 
 type PersonalData = {
   name: string
@@ -31,7 +43,8 @@ const PersonalDataScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { personalData, pangkatList, satuanKerjaList, isLoading } = useSelector((state: RootState) => state.profile)
-  const { needsProfileSetup } = useSelector((state: RootState) => state.auth);
+  const { needsProfileSetup } = useSelector((state: RootState) => state.auth)
+  
   const [formData, setFormData] = useState<PersonalData>({
     name: "",
     email: "",
@@ -51,11 +64,20 @@ const PersonalDataScreen = () => {
   const [showGenderPicker, setShowGenderPicker] = useState(false)
   const [showPangkatPicker, setShowPangkatPicker] = useState(false)
   const [showSatuanKerjaPicker, setShowSatuanKerjaPicker] = useState(false)
+  const [fadeAnimation] = useState(new Animated.Value(0))
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 3
   
   useEffect(() => {
     dispatch(getUserProfile())
     dispatch(getAllPangkat())
     dispatch(getAllSatuanKerja())
+    
+    Animated.timing(fadeAnimation, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start()
   }, [])
 
   useEffect(() => {
@@ -130,14 +152,15 @@ const PersonalDataScreen = () => {
     return true
   }
 
-  const handle = async () => {
-    if (!validateForm()) return
-
-    try {
-      await dispatch(updateUserProfile(formData)).unwrap()
-      Alert.alert("Sukses", "Data personil berhasil disimpan", [{ text: "OK", onPress: () => navigation.goBack() }])
-    } catch (err) {
-      console.error("Update profile failed:", err)
+  const handleNext = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+  
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
     }
   }
 
@@ -148,9 +171,7 @@ const PersonalDataScreen = () => {
       await dispatch(updateUserProfile(formData)).unwrap();
       
       if (needsProfileSetup) {
-        // Gunakan action baru yang menangani async storage
         await dispatch(completeProfileSetup());
-        
         Alert.alert("Sukses", "Data profil berhasil disimpan");
       } else {
         Alert.alert("Sukses", "Data personil berhasil disimpan", [
@@ -162,239 +183,349 @@ const PersonalDataScreen = () => {
     }
   };
 
-  return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="bg-yellow-500 p-4 flex-row items-center">
-        <TouchableOpacity className="p-2" onPress={() => {
-          if (navigation.canGoBack()){
-            navigation.goBack()
-          }else{
-            navigation.navigate("MainApp")
-          }
-        }}>
-          <ArrowLeft size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold text-white ml-2">DATA PERSONEL</Text>
+  const renderFieldWithIcon = (
+    label: string, 
+    value: string | number, 
+    placeholder: string, 
+    icon: React.ReactNode, 
+    onChangeText: (text: any) => void,
+    keyboardType: any = "default"
+  ) => (
+    <View className="mb-4">
+      <Text className="text-gray-700 mb-2 font-medium">{label}</Text>
+      <View className="flex-row items-center border-none  rounded-full px-3 bg-gray-50">
+        {icon}
+        <TextInput
+          className="flex-1 p-3"
+          value={value.toString()}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          keyboardType={keyboardType}
+        />
+      </View>
+    </View>
+  )
+
+  const renderPickerField = (
+    label: string,
+    value: any,
+    placeholder: string,
+    icon: React.ReactNode,
+    onPress: () => void,
+    displayText: string
+  ) => (
+    <View className="mb-4">
+      <Text className="text-gray-700 mb-2 font-medium">{label}</Text>
+      <TouchableOpacity
+        className="flex-row items-center border-none  rounded-full px-3 py-3 bg-gray-50"
+        onPress={onPress}
+      >
+        {icon}
+        <Text className={value ? "text-gray-800 ml-3" : "text-gray-400 ml-3"}>
+          {displayText || placeholder}
+        </Text>
+        <ChevronDown size={20} color="#666" className="ml-auto" />
+      </TouchableOpacity>
+    </View>
+  )
+
+  const renderStep1 = () => (
+    <View>
+      <View className="items-center mb-6">
+        <Image 
+          source={{ uri: "https://cdn-icons-png.flaticon.com/512/2550/2550383.png" }} 
+          className="w-48 h-48" 
+          resizeMode="contain"
+        />
+        <Text className="text-2xl font-bold text-gray-800 mt-4">Informasi Pribadi</Text>
+        <Text className="text-gray-600 text-center">Langkah 1 dari {totalSteps}</Text>
       </View>
 
-      <ScrollView className="flex-1 p-4">
-        <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <Text className="text-lg font-bold text-gray-800 mb-4">Informasi Pribadi</Text>
+      {renderFieldWithIcon(
+        "Nama Lengkap", 
+        formData.name, 
+        "Masukkan nama lengkap", 
+        <User size={20} color="#666" className="mr-3" />, 
+        (text) => handleChange("name", text)
+      )}
 
-          <View className="space-y-4">
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Nama Lengkap</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                value={formData.name}
-                onChangeText={(text) => handleChange("name", text)}
-                placeholder="Masukkan nama lengkap"
-              />
-            </View>
+      {renderFieldWithIcon(
+        "Email", 
+        formData.email, 
+        "Masukkan email", 
+        <Mail size={20} color="#666" className="mr-3" />, 
+        (text) => handleChange("email", text),
+        "email-address"
+      )}
 
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Email</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                value={formData.email}
-                onChangeText={(text) => handleChange("email", text)}
-                placeholder="Masukkan email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+      {renderFieldWithIcon(
+        "No. Handphone", 
+        formData.no_hp, 
+        "Masukkan nomor handphone", 
+        <Phone size={20} color="#666" className="mr-3" />, 
+        (text) => handleChange("no_hp", text),
+        "phone-pad"
+      )}
 
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">No. Handphone</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                value={formData.no_hp}
-                onChangeText={(text) => handleChange("no_hp", text)}
-                placeholder="Masukkan nomor handphone"
-                keyboardType="phone-pad"
-              />
-            </View>
+      {renderFieldWithIcon(
+        "Tempat Lahir", 
+        formData.tempat_lahir, 
+        "Masukkan tempat lahir", 
+        <MapPin size={20} color="#666" className="mr-3" />, 
+        (text) => handleChange("tempat_lahir", text)
+      )}
 
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Tempat Lahir</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                value={formData.tempat_lahir}
-                onChangeText={(text) => handleChange("tempat_lahir", text)}
-                placeholder="Masukkan tempat lahir"
-              />
-            </View>
+      {renderPickerField(
+        "Tanggal Lahir",
+        formData.tanggal_lahir,
+        "Pilih tanggal lahir",
+        <Calendar size={20} color="#666" className="mr-3" />,
+        () => setShowDatePicker(true),
+        formData.tanggal_lahir
+      )}
 
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Tanggal Lahir</Text>
-              <TouchableOpacity
-                className="flex-row items-center border border-gray-300 rounded-lg p-3 bg-gray-50"
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text className={formData.tanggal_lahir ? "text-gray-800" : "text-gray-400"}>
-                  {formData.tanggal_lahir ? formData.tanggal_lahir : "Pilih tanggal lahir"}
-                </Text>
-                <Calendar size={20} color="#666" className="ml-auto" />
-              </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} />
-              )}
-            </View>
+      {showDatePicker && (
+        <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} />
+      )}
 
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Jenis Kelamin</Text>
-              <TouchableOpacity
-                className="flex-row items-center border border-gray-300 rounded-lg p-3 bg-gray-50"
-                onPress={() => setShowGenderPicker(true)}
-              >
-                <Text className="text-gray-800">{formData.jenis_kelamin}</Text>
-                <ChevronDown size={20} color="#666" className="ml-auto" />
-              </TouchableOpacity>
+      {renderPickerField(
+        "Jenis Kelamin",
+        formData.jenis_kelamin,
+        "Pilih jenis kelamin",
+        <User size={20} color="#666" className="mr-3" />,
+        () => setShowGenderPicker(true),
+        formData.jenis_kelamin
+      )}
 
-              {showGenderPicker && (
-                <View className="border border-gray-300 rounded-lg mt-2 bg-white">
-                  <Picker
-                    selectedValue={formData.jenis_kelamin}
-                    onValueChange={(itemValue) => {
-                      handleChange("jenis_kelamin", itemValue)
-                      setShowGenderPicker(false)
-                    }}
-                  >
-                    <Picker.Item label="Laki-laki" value="Laki-laki" />
-                    <Picker.Item label="Perempuan" value="Perempuan" />
-                  </Picker>
-                </View>
-              )}
-            </View>
-          </View>
+      {showGenderPicker && (
+        <View className="border-none  rounded-full mt-2 mb-4 bg-white">
+          <Picker
+            selectedValue={formData.jenis_kelamin}
+            onValueChange={(itemValue) => {
+              handleChange("jenis_kelamin", itemValue)
+              setShowGenderPicker(false)
+            }}
+          >
+            <Picker.Item label="Laki-laki" value="Laki-laki" />
+            <Picker.Item label="Perempuan" value="Perempuan" />
+          </Picker>
         </View>
+      )}
+    </View>
+  )
 
-        <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <Text className="text-lg font-bold text-gray-800 mb-4">Informasi Pekerjaan</Text>
+  const renderStep2 = () => (
+    <View>
+      <View className="items-center mb-6">
+        <Image 
+          source={{ uri: "https://cdn-icons-png.flaticon.com/512/2876/2876880.png" }} 
+          className="w-48 h-48" 
+          resizeMode="contain"
+        />
+        <Text className="text-2xl font-bold text-gray-800 mt-4">Informasi Pekerjaan</Text>
+        <Text className="text-gray-600 text-center">Langkah 2 dari {totalSteps}</Text>
+      </View>
 
-          <View className="space-y-4">
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Pangkat</Text>
-              <TouchableOpacity
-                className="flex-row items-center border border-gray-300 rounded-lg p-3 bg-gray-50"
-                onPress={() => setShowPangkatPicker(true)}
-              >
-                <Text className={formData.id_pangkat ? "text-gray-800" : "text-gray-400"}>
-                  {formData.id_pangkat
-                    ? pangkatList.find((item) => item.id === formData.id_pangkat)?.nama_pangkat
-                    : "Pilih pangkat"}
-                </Text>
-                <ChevronDown size={20} color="#666" className="ml-auto" />
-              </TouchableOpacity>
+      {renderPickerField(
+        "Pangkat",
+        formData.id_pangkat,
+        "Pilih pangkat",
+        <Award size={20} color="#666" className="mr-3" />,
+        () => setShowPangkatPicker(true),
+        formData.id_pangkat
+          ? pangkatList.find((item) => item.id === formData.id_pangkat)?.nama_pangkat
+          : ""
+      )}
 
-              {showPangkatPicker && (
-                <View className="border border-gray-300 rounded-lg mt-2 bg-white">
-                  <Picker
-                    selectedValue={formData.id_pangkat}
-                    onValueChange={(itemValue) => {
-                      handleChange("id_pangkat", itemValue)
-                      setShowPangkatPicker(false)
-                    }}
-                  >
-                    <Picker.Item label="Pilih pangkat" value={null} />
-                    {pangkatList.map((item) => (
-                      <Picker.Item key={item.id} label={item.nama_pangkat} value={item.id} />
-                    ))}
-                  </Picker>
-                </View>
-              )}
-            </View>
-
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Satuan Kerja</Text>
-              <TouchableOpacity
-                className="flex-row items-center border border-gray-300 rounded-lg p-3 bg-gray-50"
-                onPress={() => setShowSatuanKerjaPicker(true)}
-              >
-                <Text className={formData.id_satuankerja ? "text-gray-800" : "text-gray-400"}>
-                  {formData.id_satuankerja
-                    ? satuanKerjaList.find((item) => item.id === formData.id_satuankerja)?.nama_satuan_kerja
-                    : "Pilih satuan kerja"}
-                </Text>
-                <ChevronDown size={20} color="#666" className="ml-auto" />
-              </TouchableOpacity>
-
-              {showSatuanKerjaPicker && (
-                <View className="border border-gray-300 rounded-lg mt-2 bg-white">
-                  <Picker
-                    selectedValue={formData.id_satuankerja}
-                    onValueChange={(itemValue) => {
-                      handleChange("id_satuankerja", itemValue)
-                      setShowSatuanKerjaPicker(false)
-                    }}
-                  >
-                    <Picker.Item label="Pilih satuan kerja" value={null} />
-                    {satuanKerjaList.map((item) => (
-                      <Picker.Item key={item.id} label={item.nama_satuan_kerja} value={item.id} />
-                    ))}
-                  </Picker>
-                </View>
-              )}
-            </View>
-
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Jenis Pekerjaan</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                value={formData.jenis_pekerjaan}
-                onChangeText={(text) => handleChange("jenis_pekerjaan", text)}
-                placeholder="Masukkan jenis pekerjaan"
-              />
-            </View>
-          </View>
+      {showPangkatPicker && (
+        <View className="border-none  rounded-full mt-2 mb-4 bg-white">
+          <Picker
+            selectedValue={formData.id_pangkat}
+            onValueChange={(itemValue) => {
+              handleChange("id_pangkat", itemValue)
+              setShowPangkatPicker(false)
+            }}
+          >
+            <Picker.Item label="Pilih pangkat" value={null} />
+            {pangkatList.map((item) => (
+              <Picker.Item key={item.id} label={item.nama_pangkat} value={item.id} />
+            ))}
+          </Picker>
         </View>
+      )}
 
-        <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <Text className="text-lg font-bold text-gray-800 mb-4">Informasi Fisik</Text>
+      {renderPickerField(
+        "Satuan Kerja",
+        formData.id_satuankerja,
+        "Pilih satuan kerja",
+        <Briefcase size={20} color="#666" className="mr-3" />,
+        () => setShowSatuanKerjaPicker(true),
+        formData.id_satuankerja
+          ? satuanKerjaList.find((item) => item.id === formData.id_satuankerja)?.nama_satuan_kerja
+          : ""
+      )}
 
-          <View className="space-y-4">
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Tinggi Badan (cm)</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                value={formData.tinggi_badan ? formData.tinggi_badan.toString() : ""}
-                onChangeText={(text) => handleChange("tinggi_badan", Number.parseInt(text) || 0)}
-                placeholder="Masukkan tinggi badan"
-                keyboardType="numeric"
-              />
-            </View>
-
-            <View>
-              <Text className="text-gray-700 mb-2 font-medium">Intensitas Aktivitas (1-100)</Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                value={formData.intensitas ? formData.intensitas.toString() : ""}
-                onChangeText={(text) => handleChange("intensitas", Number.parseInt(text) || 0)}
-                placeholder="Masukkan intensitas aktivitas"
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
+      {showSatuanKerjaPicker && (
+        <View className="border-none  rounded-full mt-2 mb-4 bg-white">
+          <Picker
+            selectedValue={formData.id_satuankerja}
+            onValueChange={(itemValue) => {
+              handleChange("id_satuankerja", itemValue)
+              setShowSatuanKerjaPicker(false)
+            }}
+          >
+            <Picker.Item label="Pilih satuan kerja" value={null} />
+            {satuanKerjaList.map((item) => (
+              <Picker.Item key={item.id} label={item.nama_satuan_kerja} value={item.id} />
+            ))}
+          </Picker>
         </View>
+      )}
 
-        <TouchableOpacity
-          className="bg-yellow-500 py-4 px-6 rounded-lg flex-row items-center justify-center shadow-md mb-6"
-          onPress={handleSubmit}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <>
-              <Save size={20} color="white" className="mr-2" />
-              <Text className="text-white font-bold text-lg">SIMPAN</Text>
-            </>
+      {renderFieldWithIcon(
+        "Jenis Pekerjaan", 
+        formData.jenis_pekerjaan, 
+        "Masukkan jenis pekerjaan", 
+        <Briefcase size={20} color="#666" className="mr-3" />, 
+        (text) => handleChange("jenis_pekerjaan", text)
+      )}
+    </View>
+  )
+
+  const renderStep3 = () => (
+    <View>
+      <View className="items-center mb-6">
+        <Image 
+          source={{ uri: "https://cdn-icons-png.flaticon.com/512/2175/2175188.png" }} 
+          className="w-48 h-48" 
+          resizeMode="contain"
+        />
+        <Text className="text-2xl font-bold text-gray-800 mt-4">Informasi Fisik</Text>
+        <Text className="text-gray-600 text-center">Langkah 3 dari {totalSteps}</Text>
+      </View>
+
+      {renderFieldWithIcon(
+        "Tinggi Badan (cm)", 
+        formData.tinggi_badan || "", 
+        "Masukkan tinggi badan", 
+        <Ruler size={20} color="#666" className="mr-3" />, 
+        (text) => handleChange("tinggi_badan", Number.parseInt(text) || 0),
+        "numeric"
+      )}
+
+      {renderFieldWithIcon(
+        "Intensitas Aktivitas (1-100)", 
+        formData.intensitas || "", 
+        "Masukkan intensitas aktivitas", 
+        <Activity size={20} color="#666" className="mr-3" />, 
+        (text) => handleChange("intensitas", Number.parseInt(text) || 0),
+        "numeric"
+      )}
+    </View>
+  )
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return renderStep1()
+      case 2:
+        return renderStep2()
+      case 3:
+        return renderStep3()
+      default:
+        return renderStep1()
+    }
+  }
+
+  const renderProgressBar = () => (
+    <View className="flex-row items-center mb-6">
+      {Array.from({ length: totalSteps }).map((_, index) => (
+        <View key={index} className="flex-1 flex-row items-center">
+          <View 
+            className={`h-8 w-8 rounded-full ${
+              index + 1 <= currentStep ? 'bg-yellow-500' : 'bg-gray-300'
+            } items-center justify-center`}
+          >
+            <Text className="text-white font-medium">{index + 1}</Text>
+          </View>
+          {index < totalSteps - 1 && (
+            <View 
+              className={`flex-1 h-1 ${
+                index + 1 < currentStep ? 'bg-yellow-500' : 'bg-gray-300'
+              }`}
+            />
           )}
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+        </View>
+      ))}
+    </View>
+  )
+
+  const isLastStep = currentStep === totalSteps
+
+  return (
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? -64 : 0}
+    >
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="bg-white p-4 flex-row items-center">
+          <TouchableOpacity className="p-2" onPress={() => {
+            if (navigation.canGoBack() && !needsProfileSetup) {
+              navigation.goBack()
+            }
+          }}>
+            <ArrowLeft size={24} color="#FFB800" />
+          </TouchableOpacity>
+          <Text className="text-xl font-bold text-gray-800 ml-2">
+            {needsProfileSetup ? "LENGKAPI PROFIL" : "DATA PERSONEL"}
+          </Text>
+        </View>
+
+        <ScrollView className="flex-1 p-4">
+          <Animated.View
+            style={{ opacity: fadeAnimation }}
+          >
+            {renderProgressBar()}
+            
+            {renderCurrentStep()}
+
+            <View className="flex-row mt-6 mb-6">
+              {currentStep > 1 && (
+                <TouchableOpacity
+                  className="flex-1 bg-gray-300 py-4 rounded-full mr-2"
+                  onPress={handlePrevious}
+                >
+                  <Text className="text-white text-center font-bold">KEMBALI</Text>
+                </TouchableOpacity>
+              )}
+              
+              {isLastStep ? (
+                <TouchableOpacity
+                  className="flex-1 bg-yellow-500 py-4 rounded-full ml-2"
+                  onPress={handleSubmit}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text className="text-white text-center font-bold">SIMPAN</Text>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  className="flex-1 bg-yellow-500 py-4 rounded-full ml-2"
+                  onPress={handleNext}
+                >
+                  <Text className="text-white text-center font-bold">LANJUT</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   )
 }
 
 export default PersonalDataScreen
-
