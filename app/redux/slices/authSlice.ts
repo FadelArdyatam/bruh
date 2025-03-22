@@ -24,6 +24,19 @@ const initialState: AuthState = {
   needsProfileSetup: false
 }
 
+export const completeProfileSetup = () => async (dispatch: (arg0: { type: string }) => void) => {
+  try {
+    // Simpan status di storage
+    await AsyncStorage.setItem("profileCompleted", "true");
+    
+    // Dispatch action reducer sederhana
+    dispatch({ type: 'auth/setupProfileComplete' });
+  } catch (error) {
+    console.error("Error setting profileCompleted:", error);
+  }
+}
+
+
 export const registerUser = createAsyncThunk("auth/register", async (userData: any, { rejectWithValue, dispatch }) => {
   try {
     const response = await authService.register(userData)
@@ -87,13 +100,46 @@ export const loginUser = createAsyncThunk(
   "auth/login",
   async (credentials: { username: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await authService.login(credentials)
-      return response
+      const response = await authService.login(credentials);
+      
+      // Cek status profil saat login
+      const profileCompleted = await AsyncStorage.getItem("profileCompleted");
+      
+      // Cek kelengkapan data profil
+      const user = response.user;
+      const isProfileComplete = !!(
+        user && 
+        user.tinggi_badan && 
+        user.id_pangkat &&
+        user.tanggal_lahir &&
+        user.tempat_lahir &&
+        user.id_satuankerja
+      );
+      
+      // Jika profil sebelumnya sudah selesai atau data profil lengkap
+      if (profileCompleted === "true" || isProfileComplete) {
+        await AsyncStorage.setItem("profileCompleted", "true");
+        
+        return {
+          ...response,
+          needsProfileSetup: false
+        };
+      }
+      
+      // Jika profil belum lengkap
+      await AsyncStorage.setItem("profileCompleted", "false");
+      
+      return {
+        ...response,
+        needsProfileSetup: true
+      };
     } catch (error: any) {
-      return rejectWithValue(error.message || "Login failed")
+      return rejectWithValue(error.message || "Login failed");
     }
-  },
-)
+  }
+);
+
+
 
 export const forgotPassword = createAsyncThunk("auth/forgotPassword", async (email: string, { rejectWithValue }) => {
   try {
@@ -116,6 +162,17 @@ export const changePassword = createAsyncThunk(
   },
 )
 
+const isProfileComplete = (user: { tinggi_badan: any; id_pangkat: any; tanggal_lahir: any; tempat_lahir: any; id_satuankerja: any }) => {
+  return !!(
+    user && 
+    user.tinggi_badan && 
+    user.id_pangkat &&
+    user.tanggal_lahir &&
+    user.tempat_lahir &&
+    user.id_satuankerja
+  );
+};
+
 export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWithValue }) => {
   try {
     await authService.logout()
@@ -125,33 +182,70 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWith
   }
 })
 
-export const checkAuthStatus = createAsyncThunk("auth/checkStatus", async (_, { dispatch }) => {
-  try {
-    const userData = await AsyncStorage.getItem("user")
-    const token = await AsyncStorage.getItem("token")
-    const profileCompleted = await AsyncStorage.getItem("profileCompleted")
+export const checkAuthStatus = createAsyncThunk(
+  "auth/checkStatus", 
+  async (_, { dispatch }) => {
+    try {
+      const userData = await AsyncStorage.getItem("user");
+      const token = await AsyncStorage.getItem("token");
+      const profileCompleted = await AsyncStorage.getItem("profileCompleted");
 
-    if (userData && token) {
-      const user = JSON.parse(userData);
+      console.log("Storage values:", { 
+        hasUser: !!userData, 
+        hasToken: !!token, 
+        profileCompleted 
+      });
 
-      //Muat status needsProfileSetup dari storage lokal
-      const needsSetup = profileCompleted !== "true";
-
-      return {
-        user: JSON.parse(userData),
-        token,
-        needsProfileSetup: needsSetup
+      if (userData && token) {
+        const user = JSON.parse(userData);
+        
+        // Pemeriksaan profil
+        let needsSetup = false;
+        
+        // Prioritaskan nilai profileCompleted dari storage
+        if (profileCompleted === "true") {
+          needsSetup = false;
+        } 
+        // Jika tidak ada flag, periksa data profil
+        else if (profileCompleted === null || profileCompleted === undefined) {
+          // Cek kelengkapan data
+          const isProfileComplete = !!(
+            user && 
+            user.tinggi_badan && 
+            user.id_pangkat &&
+            user.tanggal_lahir &&
+            user.tempat_lahir &&
+            user.id_satuankerja
+          );
+          
+          if (isProfileComplete) {
+            // Jika profil lengkap, simpan flag
+            await AsyncStorage.setItem("profileCompleted", "true");
+            needsSetup = false;
+          } else {
+            needsSetup = true;
+          }
+        }
+        // Jika profileCompleted = "false"
+        else {
+          needsSetup = true;
+        }
+        
+        return {
+          user,
+          token,
+          needsProfileSetup: needsSetup
+        };
       }
+      return null;
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      return null;
+    } finally {
+      dispatch(setLoading(false));
     }
-    return null
-  } catch (error) {
-    console.error("Error checking auth status:", error)
-    return null
-  } finally {
-    // Always set loading to false after checking
-    dispatch(setLoading(false))
   }
-})
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -169,8 +263,7 @@ const authSlice = createSlice({
     },
     setupProfileComplete: (state) => {
       state.needsProfileSetup = false;
-      // simpan status di storage lokal
-      AsyncStorage.setItem("profileCompleted", "true")
+      // Tidak ada akses AsyncStorage di sini
     }
   },
   extraReducers: (builder) => {
@@ -235,23 +328,15 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.isAuthenticated = true
-        state.user = action.payload.user
-        state.token = action.payload.token
-        state.pendingVerification = false
-        state.pendingEmail = null
-
-        //cek apakah data profil pengguna sudah lenkap?
-        if(!action.payload.user.tinggi_badan || ! action.payload.user.id_pangkat){
-          state.needsProfileSetup = true;
-          AsyncStorage.setItem("needsProfileSetup", "false");
-          console.log("silahkan isi profile setup");
-        }else{
-          state.needsProfileSetup = false;
-          AsyncStorage.setItem("profileCompleted", "true");
-        }
-
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.pendingVerification = false;
+        state.pendingEmail = null;
+        
+        // Gunakan nilai needsProfileSetup dari payload (hasil perhitungan di thunk)
+        state.needsProfileSetup = action.payload.needsProfileSetup;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false

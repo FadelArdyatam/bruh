@@ -11,6 +11,7 @@ import { Save, ArrowLeft, Calendar, ChevronDown } from "lucide-react-native"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import DateTimePicker from "@react-native-community/datetimepicker"
+import { completeProfileSetup } from "~/app/redux/slices/authSlice"
 
 type PersonalData = {
   name: string
@@ -142,17 +143,16 @@ const PersonalDataScreen = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
+  
     try {
       await dispatch(updateUserProfile(formData)).unwrap();
       
-      // Jika ini adalah pengaturan profil awal, atur needsProfileSetup menjadi false
       if (needsProfileSetup) {
-        dispatch({ type: 'auth/setupProfileComplete' });
-        // Navigasi ke halaman utama
-        console.log("Navigating to MainApp")
+        // Gunakan action baru yang menangani async storage
+        await dispatch(completeProfileSetup());
+        
+        Alert.alert("Sukses", "Data profil berhasil disimpan");
       } else {
-        // Kembali ke halaman sebelumnya jika hanya update profil biasa
         Alert.alert("Sukses", "Data personil berhasil disimpan", [
           { text: "OK", onPress: () => navigation.goBack() }
         ]);
