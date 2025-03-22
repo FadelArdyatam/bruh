@@ -93,9 +93,9 @@ const AppTabs = () => {
 }
 
 const AppNavigator = () => {
-  const { isAuthenticated, isLoading, pendingVerification, pendingEmail } = useSelector((state: RootState) => state.auth)
+  const { isAuthenticated, isLoading, pendingVerification, pendingEmail, needsProfileSetup } = useSelector((state: RootState) => state.auth)
 
-  console.log("Auth state:", { isAuthenticated, isLoading, pendingVerification, pendingEmail });
+  console.log("Auth state:", { isAuthenticated, isLoading, pendingVerification, pendingEmail, needsProfileSetup });
 
   if (isLoading) {
     // Return splash screen or loading indicator here
@@ -103,38 +103,41 @@ const AppNavigator = () => {
   }
 
   return (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          // Main App Stack - User is authenticated
-          <>
-            <Stack.Screen name="MainApp" component={AppTabs} />
-            <Stack.Screen name="PersonalData" component={PersonalDataScreen} />
-            <Stack.Screen name="FoodRecall" component={FoodRecallScreen} />
-            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-          </>
-        ) : (
-          // Auth Stack - User is not authenticated
-          <>
-            {pendingVerification && pendingEmail ? (
-              // Show VerifyEmail first if registration is pending verification
-              <>
-                <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} initialParams={{ email: pendingEmail }} />
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="Register" component={RegisterScreen} />
-                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-              </>
-            ) : (
-              // Normal auth flow - Login first
-              <>
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="Register" component={RegisterScreen} />
-                <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
-                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-              </>
-            )}
-          </>
-        )}
-      </Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!isAuthenticated ? (
+        // Auth Stack - User is not authenticated
+        <>
+          {pendingVerification && pendingEmail ? (
+            // Show VerifyEmail first if registration is pending verification
+            <>
+              <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} initialParams={{ email: pendingEmail }} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            </>
+          ) : (
+            // Normal auth flow - Login first
+            <>
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
+              <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            </>
+          )}
+        </>
+      ) : needsProfileSetup ? (
+        // User is authenticated but needs to complete profile setup
+        <Stack.Screen name="PersonalData" component={PersonalDataScreen} />
+      ) : (
+        // Main App Stack - User is authenticated and profile is complete
+        <>
+          <Stack.Screen name="MainApp" component={AppTabs} />
+          <Stack.Screen name="PersonalData" component={PersonalDataScreen} />
+          <Stack.Screen name="FoodRecall" component={FoodRecallScreen} />
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        </>
+      )}
+    </Stack.Navigator>
   )
 }
 

@@ -30,7 +30,7 @@ const PersonalDataScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { personalData, pangkatList, satuanKerjaList, isLoading } = useSelector((state: RootState) => state.profile)
-
+  const { needsProfileSetup } = useSelector((state: RootState) => state.auth);
   const [formData, setFormData] = useState<PersonalData>({
     name: "",
     email: "",
@@ -50,7 +50,7 @@ const PersonalDataScreen = () => {
   const [showGenderPicker, setShowGenderPicker] = useState(false)
   const [showPangkatPicker, setShowPangkatPicker] = useState(false)
   const [showSatuanKerjaPicker, setShowSatuanKerjaPicker] = useState(false)
-
+  
   useEffect(() => {
     dispatch(getUserProfile())
     dispatch(getAllPangkat())
@@ -129,7 +129,7 @@ const PersonalDataScreen = () => {
     return true
   }
 
-  const handleSubmit = async () => {
+  const handle = async () => {
     if (!validateForm()) return
 
     try {
@@ -140,10 +140,41 @@ const PersonalDataScreen = () => {
     }
   }
 
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      await dispatch(updateUserProfile(formData)).unwrap();
+      
+      // Jika ini adalah pengaturan profil awal, atur needsProfileSetup menjadi false
+      if (needsProfileSetup) {
+        dispatch({ type: 'auth/setupProfileComplete' });
+        // Navigasi ke halaman utama
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainApp' }],
+        });
+      } else {
+        // Kembali ke halaman sebelumnya jika hanya update profil biasa
+        Alert.alert("Sukses", "Data personil berhasil disimpan", [
+          { text: "OK", onPress: () => navigation.goBack() }
+        ]);
+      }
+    } catch (err) {
+      console.error("Update profile failed:", err);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="bg-yellow-500 p-4 flex-row items-center">
-        <TouchableOpacity className="p-2" onPress={() => navigation.goBack()}>
+        <TouchableOpacity className="p-2" onPress={() => {
+          if (navigation.canGoBack()){
+            navigation.goBack()
+          }else{
+            navigation.navigate("MainApp")
+          }
+        }}>
           <ArrowLeft size={24} color="white" />
         </TouchableOpacity>
         <Text className="text-xl font-bold text-white ml-2">DATA PERSONEL</Text>

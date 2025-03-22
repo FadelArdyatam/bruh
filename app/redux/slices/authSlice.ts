@@ -8,8 +8,9 @@ interface AuthState {
   token: string | null
   isLoading: boolean
   error: string | null
-  pendingVerification: boolean // tambahkan state ini untuk melacak user yang belum verifikasi
-  pendingEmail: string | null // tambahkan state ini untuk menyimpan email yang perlu diverifikasi
+  pendingVerification: boolean
+  pendingEmail: string | null 
+  needsProfileSetup: boolean; 
 }
 
 const initialState: AuthState = {
@@ -19,7 +20,8 @@ const initialState: AuthState = {
   isLoading: true, // Start with loading to check auth status
   error: null,
   pendingVerification: false,
-  pendingEmail: null
+  pendingEmail: null,
+  needsProfileSetup: false
 }
 
 export const registerUser = createAsyncThunk("auth/register", async (userData: any, { rejectWithValue, dispatch }) => {
@@ -158,6 +160,9 @@ const authSlice = createSlice({
       state.pendingVerification = action.payload.pending
       state.pendingEmail = action.payload.email
     },
+    setupProfileComplete: (state) => {
+      state.needsProfileSetup = false;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -227,6 +232,15 @@ const authSlice = createSlice({
         state.token = action.payload.token
         state.pendingVerification = false
         state.pendingEmail = null
+
+        //cek apakah data profil pengguna sudah lenkap?
+        if(!action.payload.user.tinggi_badan || ! action.payload.user.id_pangkat){
+          state.needsProfileSetup = true;
+          console.log("silahkan isi profile setup")
+        }else{
+          state.needsProfileSetup = false;
+        }
+
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false
@@ -280,7 +294,7 @@ const authSlice = createSlice({
   },
 })
 
-export const { setLoading, clearError, setPendingVerification } = authSlice.actions
+export const { setLoading, clearError, setPendingVerification, setupProfileComplete  } = authSlice.actions
 
 // Add this exported selector to help with debugging auth state
 export const selectAuthState = (state: { auth: AuthState }) => ({
