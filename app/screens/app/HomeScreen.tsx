@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native"
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
@@ -65,6 +65,21 @@ const HomeScreen = () => {
     </View>
   )
 
+  // Fungsi untuk menangani navigasi dengan pencatatan kesalahan
+  const handleNavigation = (screenName: string) => {
+    try {
+      navigation.navigate(screenName);
+      console.log(`Navigasi ke ${screenName} berhasil`);
+    } catch (error) {
+      console.error(`Error saat navigasi ke ${screenName}:`, error);
+      // Optional: Tampilkan pesan ke pengguna
+      Alert.alert(
+        "Kesalahan Navigasi", 
+        `Tidak bisa menuju ke halaman ${screenName}. Silakan coba lagi nanti.`
+      );
+    }
+  };
+
   if (profileLoading) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -84,7 +99,7 @@ const HomeScreen = () => {
                 {user?.name || personalData?.nama_lengkap || "Pengguna"}
               </Text>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+            <TouchableOpacity onPress={() => handleNavigation("ProfileTab")}>
               <Image
                 source={{ uri: "https://placeholder.com/80" }}
                 className="w-12 h-12 rounded-full border-2 border-white"
@@ -101,7 +116,7 @@ const HomeScreen = () => {
               </View>
               <TouchableOpacity
                 className="bg-yellow-500 py-2 px-4 rounded-lg"
-                onPress={() => navigation.navigate("IMT")}
+                onPress={() => handleNavigation("IMTTab")}
               >
                 <Text className="text-white font-medium">Update</Text>
               </TouchableOpacity>
@@ -155,7 +170,7 @@ const HomeScreen = () => {
           <View className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
             <TouchableOpacity
               className="p-4 border-b border-gray-100 flex-row items-center"
-              onPress={() => navigation.navigate("IMT")}
+              onPress={() => handleNavigation("IMTTab")}
             >
               <View className="bg-yellow-100 p-2 rounded-lg mr-4">
                 <BarChart2 size={24} color="#FFB800" />
@@ -168,7 +183,7 @@ const HomeScreen = () => {
 
             <TouchableOpacity
               className="p-4 border-b border-gray-100 flex-row items-center"
-              onPress={() => navigation.navigate("TrainingProgram")}
+              onPress={() => handleNavigation("TrainingProgramTab")}
             >
               <View className="bg-blue-100 p-2 rounded-lg mr-4">
                 <Activity size={24} color="#3B82F6" />
@@ -179,7 +194,10 @@ const HomeScreen = () => {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity className="p-4 flex-row items-center" onPress={() => navigation.navigate("FoodRecall")}>
+            <TouchableOpacity 
+              className="p-4 flex-row items-center" 
+              onPress={() => handleNavigation("FoodRecall")}
+            >
               <View className="bg-green-100 p-2 rounded-lg mr-4">
                 <Image source={{ uri: "https://placeholder.com/24" }} className="w-6 h-6" />
               </View>
@@ -196,4 +214,3 @@ const HomeScreen = () => {
 }
 
 export default HomeScreen
-

@@ -26,7 +26,7 @@ import ChangePasswordScreen from "../screens/app/ChangePasswordScreen"
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
 const AuthStack = createStackNavigator()
-const AppStack = createStackNavigator()
+const MainStack = createStackNavigator()
 
 const TabIcon = ({ icon: Icon, focused, label }: { icon: any; focused: boolean; label: string }) => (
   <View className="items-center justify-center">
@@ -127,19 +127,19 @@ const AuthStackNavigator = () => {
   )
 }
 
-// Stack untuk layar utama aplikasi
-const AppStackNavigator = () => {
+// Main stack navigator yang digunakan ketika user sudah login
+const MainStackNavigator = () => {
   return (
-    <AppStack.Navigator screenOptions={{ headerShown: false }}>
-      <AppStack.Screen name="Tabs" component={TabNavigator} />
-      <AppStack.Screen name="PersonalData" component={PersonalDataScreen} />
-      <AppStack.Screen name="FoodRecall" component={FoodRecallScreen} />
-      <AppStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-    </AppStack.Navigator>
+    <MainStack.Navigator screenOptions={{ headerShown: false }}>
+      <MainStack.Screen name="Main" component={TabNavigator} />
+      <MainStack.Screen name="PersonalData" component={PersonalDataScreen} />
+      <MainStack.Screen name="FoodRecall" component={FoodRecallScreen} />
+      <MainStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+    </MainStack.Navigator>
   )
 }
 
-// Navigator utama yang memilih antara autentikasi, pengaturan profil, atau aplikasi utama
+// Root navigator yang menentukan stack mana yang ditampilkan berdasarkan status auth
 const RootNavigator = () => {
   const { isAuthenticated, isLoading, needsProfileSetup } = useSelector((state: RootState) => state.auth)
   
@@ -147,26 +147,28 @@ const RootNavigator = () => {
 
   if (isLoading) {
     // Tampilkan splash screen atau indikator loading
-    return null
+    return null;
   }
 
-  // Pilih navigasi berdasarkan status autentikasi dan pengaturan profil
+  // Jika belum login, tampilkan auth stack
   if (!isAuthenticated) {
-    return <AuthStackNavigator />
-  } else if (needsProfileSetup) {
-    // Tampilkan layar pengaturan profil
+    return <AuthStackNavigator />;
+  }
+  
+  // Jika sudah login tapi belum setup profil
+  if (needsProfileSetup) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="PersonalDataSetup" component={PersonalDataScreen} />
       </Stack.Navigator>
-    )
-  } else {
-    // Tampilkan aplikasi utama
-    return <AppStackNavigator />
+    );
   }
+  
+  // Jika sudah login dan sudah setup profil
+  return <MainStackNavigator />;
 }
 
-// Komponen navigator root yang membungkus semua navigasi
+// Komponen AppNavigator yang membungkus semua navigasi dalam NavigationContainer
 const AppNavigator = () => {
   return (
       <RootNavigator />

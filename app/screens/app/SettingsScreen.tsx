@@ -8,7 +8,7 @@ import type { AppDispatch } from "../../redux/store"
 import { logoutUser } from "../../redux/slices/authSlice"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
-import { Lock, LogOut, Bell, Moon, Info, Shield, ChevronRight } from "lucide-react-native"
+import { Lock, LogOut, Bell, Moon, Info, Shield, ChevronRight, BarChart2 } from "lucide-react-native"
 
 const SettingsScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -62,6 +62,20 @@ const SettingsScreen = () => {
             />
           </View>
 
+          {/* Tambahkan opsi pengaturan notifikasi lebih detail */}
+          <TouchableOpacity
+            className="p-4 border-b border-gray-100 flex-row items-center justify-between"
+            onPress={() => navigation.navigate("NotificationSettings")}
+          >
+            <View className="flex-row items-center">
+              <View className="bg-purple-100 p-2 rounded-lg mr-4">
+                <Bell size={20} color="#8B5CF6" />
+              </View>
+              <Text className="text-gray-800 font-medium">Pengaturan Notifikasi</Text>
+            </View>
+            <ChevronRight size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
           <View className="p-4 border-b border-gray-100 flex-row justify-between items-center">
             <View className="flex-row items-center">
               <View className="bg-indigo-100 p-2 rounded-lg mr-4">
@@ -79,6 +93,20 @@ const SettingsScreen = () => {
         </View>
 
         <View className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+          {/* Tambahkan opsi laporan statistik */}
+          <TouchableOpacity
+            className="p-4 border-b border-gray-100 flex-row items-center justify-between"
+            onPress={() => navigation.navigate("AnalyticsReport")}
+          >
+            <View className="flex-row items-center">
+              <View className="bg-green-100 p-2 rounded-lg mr-4">
+                <BarChart2 size={20} color="#10B981" />
+              </View>
+              <Text className="text-gray-800 font-medium">Laporan & Statistik</Text>
+            </View>
+            <ChevronRight size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
           <TouchableOpacity
             className="p-4 border-b border-gray-100 flex-row items-center justify-between"
             onPress={() => navigation.navigate("ChangePassword")}
@@ -136,4 +164,3 @@ const SettingsScreen = () => {
 }
 
 export default SettingsScreen
-
