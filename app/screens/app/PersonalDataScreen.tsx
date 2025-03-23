@@ -470,7 +470,8 @@ const PersonalDataScreen = () => {
     >
       <SafeAreaView className="flex-1 bg-white">
         <View className="bg-white p-4 flex-row items-center">
-          <TouchableOpacity className="p-2" onPress={() => {
+          <TouchableOpacity className="p-2" 
+            onPress={() => {
             if (navigation.canGoBack() && !needsProfileSetup) {
               navigation.goBack()
             }

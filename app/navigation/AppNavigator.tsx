@@ -31,7 +31,7 @@ const MainStack = createStackNavigator()
 const TabIcon = ({ icon: Icon, focused, label }: { icon: any; focused: boolean; label: string }) => (
   <View className="items-center justify-center">
     <Icon size={22} color={focused ? "#FFB800" : "#9CA3AF"} />
-    <Text className={`text-xs mt-1 ${focused ? "text-yellow-500 font-medium" : "text-gray-500"}`}>{label}</Text>
+    <Text className={`text-xs  ${focused ? "text-yellow-500 font-bold" : "text-gray-500"}`}>{label}</Text>
   </View>
 )
 

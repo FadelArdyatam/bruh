@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { 
   View, 
   Text, 
@@ -12,7 +12,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  SafeAreaView
+  SafeAreaView,
+  ScrollView
 } from "react-native"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
@@ -33,6 +34,7 @@ const FoodRecallScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { foodList, isLoading } = useSelector((state: RootState) => state.food)
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const [activeDay, setActiveDay] = useState<"wednesday" | "sunday">("wednesday")
   const [searchQuery, setSearchQuery] = useState("")
@@ -49,6 +51,15 @@ const FoodRecallScreen = () => {
   useEffect(() => {
     dispatch(getAllFood())
   }, [])
+
+  // Scroll ke bawah saat makanan ditambahkan
+  useEffect(() => {
+    if (selectedFoods.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 300);
+    }
+  }, [selectedFoods.length]);
 
   const filteredFoodList = foodList.filter((food) =>
     food.nama_makanan.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -130,55 +141,7 @@ const FoodRecallScreen = () => {
     }
   }
 
-  const ListHeaderComponent = () => (
-    <>
-      {/* Header Pilih Hari (Di luar FlatList) */}
-      <Text style={styles.sectionTitle}>Pilih Hari</Text>
-      <View style={styles.daySelector}>
-        <TouchableOpacity
-          style={[
-            styles.dayButton,
-            activeDay === "wednesday" ? styles.activeDayButton : styles.inactiveDayButton
-          ]}
-          onPress={() => setActiveDay("wednesday")}
-        >
-          <Text style={
-            activeDay === "wednesday" ? styles.activeDayText : styles.inactiveDayText
-          }>Rabu</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.dayButton,
-            activeDay === "sunday" ? styles.activeDayButton : styles.inactiveDayButton
-          ]}
-          onPress={() => setActiveDay("sunday")}
-        >
-          <Text style={
-            activeDay === "sunday" ? styles.activeDayText : styles.inactiveDayText
-          }>Minggu</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.sectionTitle}>Cari Makanan</Text>
-      <View style={styles.searchContainer}>
-        <Search size={20} color="#9CA3AF" />
-        <TextInput
-          style={styles.searchInput}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Cari makanan..."
-        />
-        {searchQuery ? (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <X size={20} color="#9CA3AF" />
-          </TouchableOpacity>
-        ) : null}
-      </View>
-    </>
-  );
-
-  // Render makanan terpilih
+  // Render bagian makanan terpilih
   const renderSelectedFoods = () => {
     if (selectedFoods.length === 0) {
       return (
@@ -245,18 +208,74 @@ const FoodRecallScreen = () => {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack()
+              }else{
+                navigation.navigate("Home")
+              }
+            }}
           >
             <ArrowLeft size={24} color="white" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>RECALL MAKAN</Text>
         </View>
 
-        <View style={styles.content}>
-          {/* Bagian atas: ListHeaderComponent */}
-          <ListHeaderComponent />
+        {/* Content Area dengan ScrollView Utama */}
+        <ScrollView 
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          ref={scrollViewRef}
+          showsVerticalScrollIndicator={false}
+          // Memberikan padding bottom untuk space footer
+          contentInsetAdjustmentBehavior="automatic"
+        >
+          {/* Pilih Hari */}
+          <Text style={styles.sectionTitle}>Pilih Hari</Text>
+          <View style={styles.daySelector}>
+            <TouchableOpacity
+              style={[
+                styles.dayButton,
+                activeDay === "wednesday" ? styles.activeDayButton : styles.inactiveDayButton
+              ]}
+              onPress={() => setActiveDay("wednesday")}
+            >
+              <Text style={
+                activeDay === "wednesday" ? styles.activeDayText : styles.inactiveDayText
+              }>Rabu</Text>
+            </TouchableOpacity>
 
-          {/* Bagian pertama: Daftar Makanan */}
+            <TouchableOpacity
+              style={[
+                styles.dayButton,
+                activeDay === "sunday" ? styles.activeDayButton : styles.inactiveDayButton
+              ]}
+              onPress={() => setActiveDay("sunday")}
+            >
+              <Text style={
+                activeDay === "sunday" ? styles.activeDayText : styles.inactiveDayText
+              }>Minggu</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Search Bar */}
+          <Text style={styles.sectionTitle}>Cari Makanan</Text>
+          <View style={styles.searchContainer}>
+            <Search size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Cari makanan..."
+            />
+            {searchQuery ? (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <X size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          {/* Daftar Makanan */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionHeaderText}>Daftar Makanan</Text>
@@ -269,6 +288,7 @@ const FoodRecallScreen = () => {
               </TouchableOpacity>
             </View>
 
+            {/* Form tambah makanan */}
             {showAddFoodForm && (
               <View style={styles.addFoodForm}>
                 <Text style={styles.formLabel}>Tambah Makanan Baru</Text>
@@ -308,7 +328,7 @@ const FoodRecallScreen = () => {
               </View>
             )}
 
-            {/* Daftar makanan dengan FlatList yang aman */}
+            {/* Daftar makanan yang bisa di-scroll */}
             <View style={styles.foodListContainer}>
               {isLoading ? (
                 <ActivityIndicator size="large" color="#FFB800" style={styles.loader} />
@@ -336,16 +356,22 @@ const FoodRecallScreen = () => {
                     </Text>
                   }
                   nestedScrollEnabled={true}
+                  scrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                  style={styles.flatList}
                 />
               )}
             </View>
           </View>
 
-          {/* Bagian kedua: Makanan Terpilih */}
+          {/* Makanan Terpilih */}
           {renderSelectedFoods()}
-        </View>
+          
+          {/* Spacer untuk memastikan footer tidak menutupi konten */}
+          <View style={styles.footerSpacer} />
+        </ScrollView>
 
-        {/* Footer dengan tombol simpan TETAP DI BAGIAN BAWAH */}
+        {/* Footer dengan tombol simpan */}
         <View style={styles.footerContainer}>
           <TouchableOpacity
             style={[
@@ -381,7 +407,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
     padding: 16,
+    paddingBottom: 80, // Untuk memberikan ruang bagi footer
   },
   header: {
     backgroundColor: '#FFB800',
@@ -509,15 +538,24 @@ const styles = StyleSheet.create({
   },
   foodListContainer: {
     height: 200,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
     marginVertical: 8,
+    backgroundColor: '#f9fafb',
+  },
+  flatList: {
+    flex: 1,
   },
   foodItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
+    backgroundColor: 'white',
   },
   foodName: {
     fontWeight: '600',
@@ -574,17 +612,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFB800',
   },
+  footerSpacer: {
+    height: 80, // Sama dengan tinggi footer
+  },
   footerContainer: {
     padding: 16,
     backgroundColor: '#f3f4f6',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
-    // Pastikan footer selalu di bagian bawah
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 1000
   },
   saveButton: {
     backgroundColor: '#FFB800',

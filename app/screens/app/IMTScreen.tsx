@@ -13,10 +13,37 @@ import { Dimensions } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import DateTimePicker from "@react-native-community/datetimepicker"
+import Svg, { Circle, Text as SvgText, Path, G } from 'react-native-svg';
 
-const screenWidth = Dimensions.get("window").width
+const screenWidth = Dimensions.get("window").width;
 
 const IMTScreen = () => {
+  // Function to generate semi-circle gauge path
+  const createSemiCircle = (percentage: number) => {
+    const center = 50;
+    const radius = 45;
+    const startAngle = 180; // bottom of semi-circle
+    const endAngle = 0; // top of semi-circle
+    const angleRange = startAngle - endAngle;
+    const finalAngle = startAngle - (percentage * angleRange);
+    
+    // Convert angles to radians
+    const startRad = (startAngle * Math.PI) / 180;
+    const finalRad = (finalAngle * Math.PI) / 180;
+    
+    // Calculate points
+    const startX = center + radius * Math.cos(startRad);
+    const startY = center + radius * Math.sin(startRad);
+    const finalX = center + radius * Math.cos(finalRad);
+    const finalY = center + radius * Math.sin(finalRad);
+    
+    // Create path
+    const largeArcFlag = percentage > 0.5 ? 1 : 0;
+    const path = `M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${finalX} ${finalY}`;
+    
+    return path;
+  };
+
   const dispatch = useDispatch<AppDispatch>()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { weightHistory, isLoading } = useSelector((state: RootState) => state.imt)
@@ -50,12 +77,22 @@ const IMTScreen = () => {
     const imt = weight / (heightInMeters * heightInMeters)
 
     let status = ""
-    if (imt < 18.5) status = "Kurus"
-    else if (imt >= 18.5 && imt < 25) status = "Normal"
-    else if (imt >= 25 && imt < 30) status = "Kelebihan Berat Badan"
-    else status = "Obesitas"
+    let color = ""
+    if (imt < 18.5) {
+      status = "Kurus"
+      color = "#3B82F6" // blue
+    } else if (imt >= 18.5 && imt < 25) {
+      status = "Normal"
+      color = "#10B981" // green
+    } else if (imt >= 25 && imt < 30) {
+      status = "Kelebihan Berat Badan"
+      color = "#F59E0B" // amber
+    } else {
+      status = "Obesitas"
+      color = "#EF4444" // red
+    }
 
-    return { imt: imt.toFixed(1), status }
+    return { imt: imt.toFixed(1), status, color }
   }
 
   const getCurrentIMT = () => {
@@ -128,15 +165,19 @@ const IMTScreen = () => {
         {
           data,
           color: (opacity = 1) => `rgba(255, 184, 0, ${opacity})`,
-          strokeWidth: 2,
+          strokeWidth: 3,
         },
       ],
     }
   }
 
-  const chartData = prepareChartData()
   const currentIMT = getCurrentIMT()
-
+  const chartData = prepareChartData()
+  
+  // Calculate IMT percentage for the gauge (approx between 15-40)
+  const imtPercentage = currentIMT ? 
+    Math.min(Math.max((parseFloat(currentIMT.imt) - 15) / 25, 0), 1) : 0.5;
+  
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="bg-yellow-500 p-4">
@@ -147,19 +188,56 @@ const IMTScreen = () => {
         <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
           <Text className="text-lg font-bold text-gray-800 mb-4">Status IMT Saat Ini</Text>
 
-          <View className="bg-yellow-50 p-4 rounded-lg mb-4">
-            <View className="flex-row justify-between items-center">
-              <View>
-                <Text className="text-gray-500">Indeks Massa Tubuh</Text>
-                <Text className="text-3xl font-bold text-yellow-500">{currentIMT ? currentIMT.imt : "-"}</Text>
-              </View>
-              <View className="items-end">
-                <Text className="text-gray-500">Status</Text>
-                <Text className="text-lg font-semibold text-gray-800">{currentIMT ? currentIMT.status : "-"}</Text>
-              </View>
+          {/* New IMT Gauge Display */}
+          <View className="items-center mb-6">
+            <View className="relative w-48 h-24">
+              <Svg height="100%" width="100%" viewBox="0 0 100 100">
+                {/* Background semi-circle */}
+                <Path
+                  d={createSemiCircle(1)}
+                  stroke="#f5f5f5"
+                  strokeWidth="10"
+                  fill="none"
+                />
+                
+                {/* IMT value semicircle with dynamic color */}
+                <Path
+                  d={createSemiCircle(imtPercentage)}
+                  stroke={currentIMT ? currentIMT.color : "#FFB800"}
+                  strokeWidth="10"
+                  fill="none"
+                />
+                
+                {/* Center text with IMT value */}
+                <SvgText
+                  x="50"
+                  y="85"
+                  fontSize="16"
+                  fontWeight="bold"
+                  fill={currentIMT ? currentIMT.color : "#FFB800"}
+                  textAnchor="middle"
+                >
+                  {currentIMT ? currentIMT.imt : "--"}
+                </SvgText>
+                
+                {/* Category markers */}
+                <G transform="translate(0, 65)">
+                  <SvgText x="10" y="0" fontSize="8" fill="#3B82F6" textAnchor="middle">Kurus</SvgText>
+                  <SvgText x="35" y="0" fontSize="8" fill="#10B981" textAnchor="middle">Normal</SvgText>
+                  <SvgText x="65" y="0" fontSize="8" fill="#F59E0B" textAnchor="middle">Berlebih</SvgText>
+                  <SvgText x="90" y="0" fontSize="8" fill="#EF4444" textAnchor="middle">Obesitas</SvgText>
+                </G>
+              </Svg>
+            </View>
+            
+            <View className="bg-yellow-50 px-4 py-2 rounded-full">
+              <Text className="text-base font-semibold" style={{ color: currentIMT ? currentIMT.color : "#FFB800" }}>
+                Status: {currentIMT ? currentIMT.status : "-"}
+              </Text>
             </View>
           </View>
 
+          {/* Weight History Graph */}
           {chartData && (
             <View className="mb-4">
               <Text className="text-gray-700 font-medium mb-2">Grafik Berat Badan</Text>
@@ -172,7 +250,7 @@ const IMTScreen = () => {
                   backgroundGradientFrom: "#ffffff",
                   backgroundGradientTo: "#ffffff",
                   decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                  color: (opacity = 1) => `rgba(255, 184, 0, ${opacity})`,
                   labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                   style: {
                     borderRadius: 16,
@@ -234,24 +312,25 @@ const IMTScreen = () => {
             <View>
               <Text className="text-gray-700 mb-2 font-medium">Berat Badan (kg)</Text>
               <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+                className="border-none bg-yellow-50 rounded-full p-4 text-center text-lg"
                 value={beratBadan}
                 onChangeText={setBeratBadan}
                 placeholder="Masukkan berat badan"
                 keyboardType="numeric"
+                placeholderTextColor="#9CA3AF"
               />
             </View>
 
             <View>
               <Text className="text-gray-700 mb-2 font-medium">Tanggal</Text>
               <TouchableOpacity
-                className="flex-row items-center border border-gray-300 rounded-lg p-3 bg-gray-50"
+                className="flex-row items-center justify-between border-none bg-yellow-50 rounded-full p-4"
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text className={selectedDate ? "text-gray-800" : "text-gray-400"}>
                   {selectedDate ? selectedDate : "Pilih tanggal"}
                 </Text>
-                <Calendar size={20} color="#666" className="ml-auto" />
+                <Calendar size={20} color="#FFB800" />
               </TouchableOpacity>
               {showDatePicker && (
                 <DateTimePicker value={date} mode="date" display="default" onChange={handleDateChange} />
@@ -261,17 +340,18 @@ const IMTScreen = () => {
             <View>
               <Text className="text-gray-700 mb-2 font-medium">Minggu Ke</Text>
               <TextInput
-                className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+                className="border-none bg-yellow-50 rounded-full p-4 text-center text-lg"
                 value={mingguKe}
                 onChangeText={setMingguKe}
                 placeholder="Masukkan minggu ke"
                 keyboardType="numeric"
+                placeholderTextColor="#9CA3AF"
               />
             </View>
           </View>
 
           <TouchableOpacity
-            className="bg-yellow-500 py-3 rounded-lg flex-row items-center justify-center mt-6"
+            className="bg-yellow-500 py-4 rounded-full flex-row items-center justify-center mt-6 shadow-md"
             onPress={handleSaveWeight}
             disabled={isLoading}
           >
@@ -293,10 +373,26 @@ const IMTScreen = () => {
           </Text>
 
           <TouchableOpacity
-            className="bg-blue-500 py-3 rounded-lg flex-row items-center justify-center"
+            className="bg-amber-500 py-4 rounded-full flex-row items-center justify-center shadow-md"
             onPress={() => navigation.navigate("FoodRecall")}
           >
             <Text className="text-white font-bold mr-2">ISI RECALL MAKAN</Text>
+            <ArrowRight size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Activity Status Card - Navigate to new Activity Status screen */}
+        <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
+          <Text className="text-lg font-bold text-gray-800 mb-4">Status Aktivitas</Text>
+          <Text className="text-gray-600 mb-4">
+            Pantau detak jantung, asupan air, waktu tidur, dan progres latihan Anda.
+          </Text>
+
+          <TouchableOpacity
+            className="bg-amber-500 py-4 rounded-full flex-row items-center justify-center shadow-md"
+            onPress={() => navigation.navigate("ActivityStatus")}
+          >
+            <Text className="text-white font-bold mr-2">LIHAT STATUS AKTIVITAS</Text>
             <ArrowRight size={20} color="white" />
           </TouchableOpacity>
         </View>
@@ -306,4 +402,3 @@ const IMTScreen = () => {
 }
 
 export default IMTScreen
-

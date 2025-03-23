@@ -74,11 +74,7 @@ const LoginScreen = () => {
             {/* Header and Illustration */}
             <View className="items-center mt-10">
               <Image 
-                source={require("../../../assets/images/icon.png")} 
-                className="w-20 h-20 mb-4" 
-              />
-              <Image 
-                source={{ uri: "https://cdn-icons-png.flaticon.com/512/4228/4228735.png" }} 
+                source={require("../../../assets/images/police-login.png")} 
                 className="w-56 h-56" 
                 resizeMode="contain"
               />
