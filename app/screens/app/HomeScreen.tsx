@@ -35,11 +35,22 @@ const HomeScreen = () => {
     else setGreeting("Selamat Malam")
   }, [])
 
+  // Helper function untuk mengakses data personel
+  const getPersonelData = () => {
+    if (!personalData) return null
+    
+    // Cek apakah personel ada dalam data respons
+    return personalData.personel || null
+  }
+
   // Calculate IMT if weight and height data available
   const calculateIMT = () => {
-    if (weightHistory.length > 0 && personalData?.tinggi_badan) {
+    const personelData = getPersonelData()
+    const tinggiBadan = personelData?.tinggi_badan
+    
+    if (weightHistory.length > 0 && tinggiBadan) {
       const latestWeight = weightHistory[weightHistory.length - 1].berat_badan
-      const height = personalData.tinggi_badan / 100 // convert to meters
+      const height = tinggiBadan / 100 // convert to meters
       const imt = latestWeight / (height * height)
 
       let status = ""
@@ -54,6 +65,13 @@ const HomeScreen = () => {
   }
 
   const imtData = calculateIMT()
+  const personelData = getPersonelData()
+
+  // Debug log untuk memeriksa struktur data
+  console.log("personalData:", personalData)
+  console.log("personelData:", personelData)
+  console.log("weightHistory:", weightHistory)
+  console.log("trainingHistory:", trainingHistory)
 
   const renderStatCard = (title: string, value: string, icon: any, color: string, bgColor: string) => (
     <View className={`${bgColor} p-4 rounded-xl flex-1 shadow-sm`}>
@@ -96,7 +114,7 @@ const HomeScreen = () => {
             <View>
               <Text className="text-white text-lg">{greeting},</Text>
               <Text className="text-white text-2xl font-bold">
-                {user?.name || personalData?.nama_lengkap || "Pengguna"}
+                {user?.name || personalData?.nama_lengkap || personelData?.nama_lengkap || "Pengguna"}
               </Text>
             </View>
             <TouchableOpacity onPress={() => handleNavigation("ProfileTab")}>
@@ -156,7 +174,7 @@ const HomeScreen = () => {
 
             {renderStatCard(
               "Tinggi",
-              personalData?.tinggi_badan ? `${personalData.tinggi_badan} cm` : "-",
+              personelData?.tinggi_badan ? `${personelData.tinggi_badan} cm` : "-",
               <Award size={20} color="#8B5CF6" />,
               "bg-purple-100",
               "bg-white",

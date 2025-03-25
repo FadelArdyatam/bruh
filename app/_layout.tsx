@@ -52,14 +52,6 @@ export default function RootLayout() {
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
       <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />
       <Stack>
-        <Stack.Screen
-          name='index'
-          options={{
-            title: 'Sipolgar',
-            headerRight: () => <ThemeToggle />,
-          }}
-          
-        />
       </Stack>
       <PortalHost />
     </ThemeProvider>

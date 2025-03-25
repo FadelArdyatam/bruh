@@ -27,8 +27,18 @@ export const getUserProfile = createAsyncThunk("profile/getUserProfile", async (
     // Logging untuk debug
     console.log("getUserProfile response:", response)
     
-    // Jika respons API langsung adalah data user (bukan response.user)
-    return response.data || response.user || response
+    // Ekstrak data user dari respons API
+    let userData = null;
+    
+    if (response.data) {
+      userData = response.data;
+    } else if (response.user) {
+      userData = response.user;
+    } else {
+      userData = response;
+    }
+    
+    return userData;
   } catch (error: any) {
     console.error("getUserProfile error:", error)
     return rejectWithValue(error.message)
@@ -103,7 +113,10 @@ const profileSlice = createSlice({
       })
       .addCase(getUserProfile.fulfilled, (state, action) => {
         state.isLoading = false
+        
+        // Simpan data ke state
         state.personalData = action.payload
+        
         console.log("Profile data updated in Redux:", action.payload)
       })
       .addCase(getUserProfile.rejected, (state, action) => {

@@ -70,6 +70,14 @@ const IMTScreen = () => {
     setSelectedDate(formattedDate)
   }
 
+  // Helper function untuk mengakses data personel
+  const getPersonelData = () => {
+    if (!personalData) return null
+    
+    // Cek apakah personel ada dalam data respons
+    return personalData.personel || null
+  }
+
   const calculateIMT = (weight: number, height: number) => {
     if (!weight || !height) return null
 
@@ -96,9 +104,16 @@ const IMTScreen = () => {
   }
 
   const getCurrentIMT = () => {
-    if (weightHistory.length > 0 && personalData?.tinggi_badan) {
+    const personelData = getPersonelData()
+    const tinggiBadan = personelData?.tinggi_badan
+
+    // Debug logs
+    console.log("getTinggiBadan:", tinggiBadan)
+    console.log("weightHistory:", weightHistory)
+    
+    if (weightHistory.length > 0 && tinggiBadan) {
       const latestWeight = weightHistory[weightHistory.length - 1].berat_badan
-      return calculateIMT(latestWeight, personalData.tinggi_badan)
+      return calculateIMT(latestWeight, tinggiBadan)
     }
     return null
   }
@@ -140,6 +155,9 @@ const IMTScreen = () => {
       setBeratBadan("")
       setSelectedDate("")
       setMingguKe("1")
+      
+      // Refresh data berat setelah menyimpan
+      dispatch(getWeightData())
     } catch (err) {
       console.error("Failed to save weight data:", err)
     }
