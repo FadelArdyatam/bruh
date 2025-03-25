@@ -204,7 +204,7 @@ const TrainingProgramScreen = () => {
               <View>
                 <Text className="text-gray-700 mb-2 font-medium">Durasi Latihan (menit)</Text>
                 <TextInput
-                  className="border-none bg-yellow-50 rounded-full p-4 text-center text-lg"
+                  className="border-none bg-amber-50 rounded-full p-4 text-center text-lg"
                   value={duration}
                   onChangeText={setDuration}
                   placeholder="Masukkan durasi latihan"
@@ -216,7 +216,7 @@ const TrainingProgramScreen = () => {
               <View>
                 <Text className="text-gray-700 mb-2 font-medium">Denyut Jantung Maksimal (per menit)</Text>
                 <TextInput
-                  className="border-none bg-yellow-50 rounded-full p-4 text-center text-lg"
+                  className="border-none bg-amber-50 rounded-full p-4 text-center text-lg"
                   value={heartRate}
                   onChangeText={setHeartRate}
                   placeholder="Masukkan denyut jantung"
@@ -228,7 +228,7 @@ const TrainingProgramScreen = () => {
               <View>
                 <Text className="text-gray-700 mb-2 font-medium">Jarak Tempuh (km)</Text>
                 <TextInput
-                  className="border-none bg-yellow-50 rounded-full p-4 text-center text-lg"
+                  className="border-none bg-amber-50 rounded-full p-4 text-center text-lg"
                   value={distance}
                   onChangeText={setDistance}
                   placeholder="Masukkan jarak tempuh"
@@ -238,7 +238,7 @@ const TrainingProgramScreen = () => {
               </View>
 
               {duration && selectedWorkout.kalori_ratarata_perdetik && (
-                <View className="bg-yellow-50 p-4 rounded-2xl">
+                <View className="bg-amber-50 p-4 rounded-2xl">
                   <View className="flex-row items-center justify-between">
                     <Text className="font-medium text-gray-700">Estimasi Kalori Terbakar:</Text>
                     <Text className="text-2xl font-bold text-amber-500">
@@ -267,7 +267,7 @@ const TrainingProgramScreen = () => {
         )}
 
         <TouchableOpacity
-          className="bg-yellow-500 py-4 px-6 rounded-full flex-row items-center justify-center shadow-md mb-6"
+          className="bg-amber-500 py-4 px-6 rounded-full flex-row items-center justify-center shadow-md mb-6"
           onPress={handleSaveTraining}
           disabled={isLoading || !selectedWorkout}
         >

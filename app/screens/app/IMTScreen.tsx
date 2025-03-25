@@ -7,13 +7,14 @@ import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
 import { getWeightData, saveWeightData } from "../../redux/slices/imtSlice"
 import { getUserProfile } from "../../redux/slices/profileSlice"
-import { Plus, Save, ArrowRight, Calendar } from "lucide-react-native"
+import { Plus, Save, ArrowRight, Calendar, Info, Activity } from "lucide-react-native"
 import { LineChart } from "react-native-chart-kit"
 import { Dimensions } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import DateTimePicker from "@react-native-community/datetimepicker"
-import Svg, { Circle, Text as SvgText, Path, G } from 'react-native-svg';
+import Svg, { Circle, Text as SvgText, Path, G } from 'react-native-svg'
+import { LinearGradient } from "expo-linear-gradient"
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -75,7 +76,7 @@ const IMTScreen = () => {
     if (!personalData) return null
     
     // Cek apakah personel ada dalam data respons
-    return personalData.personel || null
+    return personalData.personel || personalData
   }
 
   const calculateIMT = (weight: number, height: number) => {
@@ -106,10 +107,6 @@ const IMTScreen = () => {
   const getCurrentIMT = () => {
     const personelData = getPersonelData()
     const tinggiBadan = personelData?.tinggi_badan
-
-    // Debug logs
-    console.log("getTinggiBadan:", tinggiBadan)
-    console.log("weightHistory:", weightHistory)
     
     if (weightHistory.length > 0 && tinggiBadan) {
       const latestWeight = weightHistory[weightHistory.length - 1].berat_badan
@@ -197,71 +194,111 @@ const IMTScreen = () => {
     Math.min(Math.max((parseFloat(currentIMT.imt) - 15) / 25, 0), 1) : 0.5;
   
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="bg-yellow-500 p-4">
+    <SafeAreaView className="flex-1 bg-gray-50 rounded-lg">
+      <View style={{ overflow: 'hidden', borderBottomLeftRadius: 30, borderBottomRightRadius: 30 }}>
+      <LinearGradient colors={["#FFB800", "#FF8A00"]} className="p-4 pt-8 pb-12 rounded-full">
         <Text className="text-xl font-bold text-white">INDEKS MASSA TUBUH (IMT)</Text>
-      </View>
-
-      <ScrollView className="flex-1 p-4">
-        <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <Text className="text-lg font-bold text-gray-800 mb-4">Status IMT Saat Ini</Text>
-
-          {/* New IMT Gauge Display */}
-          <View className="items-center mb-6">
-            <View className="relative w-48 h-24">
-              <Svg height="100%" width="100%" viewBox="0 0 100 100">
-                {/* Background semi-circle */}
-                <Path
-                  d={createSemiCircle(1)}
-                  stroke="#f5f5f5"
-                  strokeWidth="10"
-                  fill="none"
-                />
-                
-                {/* IMT value semicircle with dynamic color */}
-                <Path
-                  d={createSemiCircle(imtPercentage)}
-                  stroke={currentIMT ? currentIMT.color : "#FFB800"}
-                  strokeWidth="10"
-                  fill="none"
-                />
-                
-                {/* Center text with IMT value */}
-                <SvgText
-                  x="50"
-                  y="85"
-                  fontSize="16"
-                  fontWeight="bold"
-                  fill={currentIMT ? currentIMT.color : "#FFB800"}
-                  textAnchor="middle"
-                >
-                  {currentIMT ? currentIMT.imt : "--"}
-                </SvgText>
-                
-                {/* Category markers */}
-                <G transform="translate(0, 65)">
-                  <SvgText x="10" y="0" fontSize="8" fill="#3B82F6" textAnchor="middle">Kurus</SvgText>
-                  <SvgText x="35" y="0" fontSize="8" fill="#10B981" textAnchor="middle">Normal</SvgText>
-                  <SvgText x="65" y="0" fontSize="8" fill="#F59E0B" textAnchor="middle">Berlebih</SvgText>
-                  <SvgText x="90" y="0" fontSize="8" fill="#EF4444" textAnchor="middle">Obesitas</SvgText>
-                </G>
-              </Svg>
+        
+        {/* Status IMT Ringkasan */}
+        <View className="bg-white/20 p-4 rounded-2xl mt-4">
+          <View className="flex-row justify-between items-center">
+            <View>
+              <Text className="text-white text-sm opacity-80">Status IMT Anda</Text>
+              <Text className="text-white text-2xl font-bold">{currentIMT ? currentIMT.imt : "--"}</Text>
             </View>
-            
-            <View className="bg-yellow-50 px-4 py-2 rounded-full">
-              <Text className="text-base font-semibold" style={{ color: currentIMT ? currentIMT.color : "#FFB800" }}>
-                Status: {currentIMT ? currentIMT.status : "-"}
+            <View className="bg-white px-4 py-2 rounded-full">
+              <Text 
+                className="font-bold"
+                style={{ color: currentIMT ? currentIMT.color : "#FFB800" }}
+              >
+                {currentIMT ? currentIMT.status : "Belum ada data"}
               </Text>
             </View>
           </View>
+        </View>
+      </LinearGradient>
+      </View>
+      
+      <ScrollView className="flex-1 px-6 -mt-6">
+        {/* Kartu IMT Gauge dan Grafik */}
+        <View className="bg-white rounded-3xl p-6 shadow-sm mb-6">
+          {/* IMT Gauge Display */}
+        {/* Kartu IMT Gauge */}
+        <View className="bg-white rounded-3xl p-6 shadow-sm mb-6">
+          <Text className="text-xl font-bold text-gray-800 mb-4">Kategori IMT</Text>
+          
+          {/* IMT Gauge Display */}
+          <View className="items-center mb-2 border border-gray-100 bg-gray-50 py-6 px-4 rounded-2xl">
+            {/* IMT Value besar di tengah */}
+            <View style={{ 
+              width: 150, 
+              height: 150, 
+              borderRadius: 60, 
+              backgroundColor: currentIMT ? `${currentIMT.color}20` : '#FFB80020',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderWidth: 4,
+              borderColor: currentIMT ? currentIMT.color : '#FFB800'
+            }}>
+              <Text className="text-4xl font-bold" style={{ color: currentIMT ? currentIMT.color : '#FFB800' }}>
+                {currentIMT ? currentIMT.imt : "--"}
+              </Text>
+              <Text className="text-base font-medium" style={{ color: currentIMT ? currentIMT.color : '#FFB800' }}>
+                {currentIMT ? currentIMT.status : "Belum ada data"}
+              </Text>
+            </View>
+          
+            {/* Kategori IMT */}
+            <View className="flex-row justify-between mt-6 bg-white p-2 rounded-xl shadow-sm w-full">
+              <View className="border-l-4 border-blue-500 pl-2 flex-1 mr-1">
+                <Text className="text-xs text-gray-500">Kurus</Text>
+                <Text className="text-xs font-bold text-blue-500">&lt; 18.5</Text>
+              </View>
+              <View className="border-l-4 border-green-500 pl-2 flex-1 mr-1">
+                <Text className="text-xs text-gray-500">Normal</Text>
+                <Text className="text-xs font-bold text-green-500">18.5 - 24.9</Text>
+              </View>
+              <View className="border-l-4 border-amber-500 pl-2 flex-1 mr-1">
+                <Text className="text-xs text-gray-500">Berlebih</Text>
+                <Text className="text-xs font-bold text-amber-500">25.0 - 29.9</Text>
+              </View>
+              <View className="border-l-4 border-red-500 pl-2 flex-1">
+                <Text className="text-xs text-gray-500">Obesitas</Text>
+                <Text className="text-xs font-bold text-red-500">≥ 30.0</Text>
+              </View>
+            </View>
+          
+            <TouchableOpacity
+              className="flex-row items-center justify-center mt-4 bg-amber-50 p-3 rounded-full border border-amber-200"
+              onPress={() => setShowIMTDetails(!showIMTDetails)}
+            >
+              <Text className="text-amber-700 font-medium mr-2">
+                {showIMTDetails ? "Sembunyikan Info" : "Apa itu IMT?"}
+              </Text>
+              <Info size={18} color="#B45309" />
+            </TouchableOpacity>
+            
+            {showIMTDetails && (
+              <View className="mt-4 bg-amber-50 p-4 rounded-2xl border border-amber-200">
+                <Text className="font-bold text-gray-800 mb-2">Tentang Indeks Massa Tubuh (IMT)</Text>
+                <Text className="text-gray-700 mb-2">
+                  IMT adalah cara mengukur massa tubuh berdasarkan berat dan tinggi badan untuk mengetahui apakah berat badan Anda ideal.
+                </Text>
+                <Text className="text-gray-700">
+                  IMT dihitung dengan rumus: Berat Badan (kg) ÷ [Tinggi Badan (m)]²
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
 
           {/* Weight History Graph */}
           {chartData && (
             <View className="mb-4">
-              <Text className="text-gray-700 font-medium mb-2">Grafik Berat Badan</Text>
+              <Text className="text-gray-800 font-bold mb-2">Grafik Berat Badan</Text>
               <LineChart
                 data={chartData}
-                width={screenWidth - 48}
+                width={screenWidth - 60}
                 height={220}
                 chartConfig={{
                   backgroundColor: "#ffffff",
@@ -289,32 +326,32 @@ const IMTScreen = () => {
           )}
 
           <TouchableOpacity
-            className="flex-row items-center justify-between"
+            className="flex-row items-center justify-between mt-2 bg-gray-50 p-3 rounded-full"
             onPress={() => setShowIMTDetails(!showIMTDetails)}
           >
-            <Text className="text-blue-500 font-medium">
+            <Text className="text-gray-700 font-medium">
               {showIMTDetails ? "Sembunyikan Detail" : "Lihat Detail IMT"}
             </Text>
-            <Plus size={20} color="#3B82F6" />
+            <Info size={18} color="#6B7280" />
           </TouchableOpacity>
 
           {showIMTDetails && (
-            <View className="mt-4 bg-gray-50 p-4 rounded-lg">
-              <Text className="font-bold mb-2">Kategori IMT:</Text>
+            <View className="mt-4 bg-gray-50 p-4 rounded-2xl">
+              <Text className="font-bold text-gray-800 mb-2">Kategori IMT:</Text>
               <View className="space-y-2">
-                <Text>• Kurus: IMT {"<"} 18.5</Text>
-                <Text>• Normal: IMT 18.5 - 24.9</Text>
-                <Text>• Kelebihan Berat Badan: IMT 25 - 29.9</Text>
-                <Text>• Obesitas: IMT ≥ 30</Text>
+                <Text className="text-gray-700">• Kurus: IMT {"<"} 18.5</Text>
+                <Text className="text-gray-700">• Normal: IMT 18.5 - 24.9</Text>
+                <Text className="text-gray-700">• Kelebihan Berat Badan: IMT 25 - 29.9</Text>
+                <Text className="text-gray-700">• Obesitas: IMT ≥ 30</Text>
               </View>
 
               {weightHistory.length > 0 && (
                 <View className="mt-4">
-                  <Text className="font-bold mb-2">Riwayat Berat Badan:</Text>
+                  <Text className="font-bold text-gray-800 mb-2">Riwayat Berat Badan:</Text>
                   {weightHistory.map((item, index) => (
                     <View key={index} className="flex-row justify-between py-2 border-b border-gray-200">
-                      <Text>{new Date(item.tgl_berat_badan).toLocaleDateString()}</Text>
-                      <Text className="font-medium">{item.berat_badan} kg</Text>
+                      <Text className="text-gray-700">{new Date(item.tgl_berat_badan).toLocaleDateString()}</Text>
+                      <Text className="font-medium text-gray-800">{item.berat_badan} kg</Text>
                     </View>
                   ))}
                 </View>
@@ -323,14 +360,15 @@ const IMTScreen = () => {
           )}
         </View>
 
-        <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <Text className="text-lg font-bold text-gray-800 mb-4">Input Berat Badan</Text>
+        {/* Input Berat Badan Card */}
+        <View className="bg-white rounded-3xl p-6 shadow-sm mb-6">
+          <Text className="text-xl font-bold text-gray-800 mb-4">Input Berat Badan</Text>
 
           <View className="space-y-4">
             <View>
               <Text className="text-gray-700 mb-2 font-medium">Berat Badan (kg)</Text>
               <TextInput
-                className="border-none bg-yellow-50 rounded-full p-4 text-center text-lg"
+                className="border border-gray-200 rounded-full p-4 text-center text-lg bg-white"
                 value={beratBadan}
                 onChangeText={setBeratBadan}
                 placeholder="Masukkan berat badan"
@@ -342,7 +380,7 @@ const IMTScreen = () => {
             <View>
               <Text className="text-gray-700 mb-2 font-medium">Tanggal</Text>
               <TouchableOpacity
-                className="flex-row items-center justify-between border-none bg-yellow-50 rounded-full p-4"
+                className="flex-row items-center justify-between border border-gray-200 rounded-full p-4 bg-white"
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text className={selectedDate ? "text-gray-800" : "text-gray-400"}>
@@ -358,7 +396,7 @@ const IMTScreen = () => {
             <View>
               <Text className="text-gray-700 mb-2 font-medium">Minggu Ke</Text>
               <TextInput
-                className="border-none bg-yellow-50 rounded-full p-4 text-center text-lg"
+                className="border border-gray-200 rounded-full p-4 text-center text-lg bg-white"
                 value={mingguKe}
                 onChangeText={setMingguKe}
                 placeholder="Masukkan minggu ke"
@@ -369,7 +407,7 @@ const IMTScreen = () => {
           </View>
 
           <TouchableOpacity
-            className="bg-yellow-500 py-4 rounded-full flex-row items-center justify-center mt-6 shadow-md"
+            className="bg-amber-500 py-4 rounded-full flex-row items-center justify-center mt-6 shadow-md"
             onPress={handleSaveWeight}
             disabled={isLoading}
           >
@@ -384,34 +422,36 @@ const IMTScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <Text className="text-lg font-bold text-gray-800 mb-4">Recall Makan</Text>
-          <Text className="text-gray-600 mb-4">
-            Silahkan isi recall makan selama seminggu sebelum kegiatan latihan (hari Rabu dan Minggu).
-          </Text>
-
+        {/* Menu Cepat */}
+        <View className="bg-white rounded-3xl p-6 shadow-sm mb-6">
+          <Text className="text-xl font-bold text-gray-800 mb-4">Menu Cepat</Text>
+          
           <TouchableOpacity
-            className="bg-amber-500 py-4 rounded-full flex-row items-center justify-center shadow-md"
+            className="flex-row items-center bg-amber-50 p-4 rounded-2xl mb-4"
             onPress={() => navigation.navigate("FoodRecall")}
           >
-            <Text className="text-white font-bold mr-2">ISI RECALL MAKAN</Text>
-            <ArrowRight size={20} color="white" />
+            <View className="w-12 h-12 bg-amber-500 rounded-full items-center justify-center mr-4">
+              <Plus size={24} color="white" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-gray-800 font-bold">Recall Makan</Text>
+              <Text className="text-gray-600">Catat asupan makanan hari Rabu dan Minggu</Text>
+            </View>
+            <ArrowRight size={20} color="#FFB800" />
           </TouchableOpacity>
-        </View>
-        
-        {/* Activity Status Card - Navigate to new Activity Status screen */}
-        <View className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <Text className="text-lg font-bold text-gray-800 mb-4">Status Aktivitas</Text>
-          <Text className="text-gray-600 mb-4">
-            Pantau detak jantung, asupan air, waktu tidur, dan progres latihan Anda.
-          </Text>
-
+          
           <TouchableOpacity
-            className="bg-amber-500 py-4 rounded-full flex-row items-center justify-center shadow-md"
+            className="flex-row items-center bg-blue-50 p-4 rounded-2xl"
             onPress={() => navigation.navigate("ActivityStatus")}
           >
-            <Text className="text-white font-bold mr-2">LIHAT STATUS AKTIVITAS</Text>
-            <ArrowRight size={20} color="white" />
+            <View className="w-12 h-12 bg-blue-500 rounded-full items-center justify-center mr-4">
+              <Activity size={24} color="white" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-gray-800 font-bold">Status Aktivitas</Text>
+              <Text className="text-gray-600">Pantau detak jantung dan aktivitas Anda</Text>
+            </View>
+            <ArrowRight size={20} color="#3B82F6" />
           </TouchableOpacity>
         </View>
       </ScrollView>

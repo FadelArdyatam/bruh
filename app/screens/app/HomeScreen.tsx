@@ -1,17 +1,32 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from "react-native"
+import React, { useEffect, useState } from "react"
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  Image, 
+  ActivityIndicator, 
+  Alert,
+  StatusBar,
+  Dimensions,
+  StyleSheet
+} from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
 import { getUserProfile } from "../../redux/slices/profileSlice"
 import { getWeightData } from "../../redux/slices/imtSlice"
 import { getAllWorkouts } from "../../redux/slices/trainingSlice"
-import { BarChart2, TrendingUp, Activity, Award } from "lucide-react-native"
+import { BarChart2, TrendingUp, Activity, Award, User, History, ChevronRight } from "lucide-react-native"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import { LinearGradient } from "expo-linear-gradient"
+import { useTheme } from "../../context/ThemeContext"
+import { LineChart } from "react-native-chart-kit"
+
+const screenWidth = Dimensions.get('window').width;
 
 const HomeScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -20,6 +35,7 @@ const HomeScreen = () => {
   const { personalData, isLoading: profileLoading } = useSelector((state: RootState) => state.profile)
   const { weightHistory } = useSelector((state: RootState) => state.imt)
   const { trainingHistory } = useSelector((state: RootState) => state.training)
+  const { theme, darkMode } = useTheme()
 
   const [greeting, setGreeting] = useState("")
 
@@ -35,11 +51,9 @@ const HomeScreen = () => {
     else setGreeting("Selamat Malam")
   }, [])
 
-  // Helper function untuk mengakses data personel
+  // Helper function to get person data
   const getPersonelData = () => {
     if (!personalData) return null
-    
-    // Cek apakah personel ada dalam data respons
     return personalData.personel || null
   }
 
@@ -67,168 +81,731 @@ const HomeScreen = () => {
   const imtData = calculateIMT()
   const personelData = getPersonelData()
 
-  // Debug log untuk memeriksa struktur data
-  console.log("personalData:", personalData)
-  console.log("personelData:", personelData)
-  console.log("weightHistory:", weightHistory)
-  console.log("trainingHistory:", trainingHistory)
+  // Prepare weight history data for chart
+  const prepareChartData = () => {
+    if (weightHistory.length === 0) return null
 
-  const renderStatCard = (title: string, value: string, icon: any, color: string, bgColor: string) => (
-    <View className={`${bgColor} p-4 rounded-xl flex-1 shadow-sm`}>
-      <View className="flex-row justify-between items-start">
-        <Text className="text-gray-700 font-medium">{title}</Text>
-        <View className={`${color} p-2 rounded-full`}>{icon}</View>
-      </View>
-      <Text className="text-2xl font-bold mt-2">{value}</Text>
-    </View>
-  )
+    const sortedData = [...weightHistory].sort(
+      (a, b) => new Date(a.tgl_berat_badan).getTime() - new Date(b.tgl_berat_badan).getTime(),
+    ).slice(-7) // Get last 7 entries
 
-  // Fungsi untuk menangani navigasi dengan pencatatan kesalahan
+    const labels = sortedData.map((item) => {
+      const date = new Date(item.tgl_berat_badan)
+      return `${date.getDate()}/${date.getMonth() + 1}`
+    })
+
+    const data = sortedData.map((item) => item.berat_badan)
+
+    return {
+      labels,
+      datasets: [
+        {
+          data,
+          color: (opacity = 1) => theme.primary,
+          strokeWidth: 3,
+        },
+      ],
+    }
+  }
+
+  const chartData = prepareChartData()
+
+  // Recent activities
+  const getRecentActivities = () => {
+    const activities: { type: string; date: Date; value?: number; unit?: string; name?: any; duration?: any; calories?: any }[] = [];
+    
+    // Add recent weight entries
+    if (weightHistory && weightHistory.length > 0) {
+      const recentWeights = [...weightHistory]
+        .sort((a, b) => new Date(b.tgl_berat_badan).getTime() - new Date(a.tgl_berat_badan).getTime())
+        .slice(0, 2);
+        
+      recentWeights.forEach(weight => {
+        activities.push({
+          type: 'weight',
+          date: new Date(weight.tgl_berat_badan),
+          value: weight.berat_badan,
+          unit: 'kg'
+        });
+      });
+    }
+    
+    // Add recent training sessions
+    if (trainingHistory && trainingHistory.length > 0) {
+      const recentTrainings = [...trainingHistory].slice(0, 2);
+      
+      recentTrainings.forEach(training => {
+        activities.push({
+          type: 'training',
+          date: new Date(training.date),
+          name: training.workout_name,
+          duration: training.duration,
+          calories: training.calories_burned
+        });
+      });
+    }
+    
+    // Sort by date
+    return activities.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 3);
+  };
+
+  const recentActivities = getRecentActivities();
+
+  // Function to format date
+  const formatDate = (date: Date) => {
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Hari ini';
+    } else if (diffDays === 1) {
+      return 'Kemarin';
+    } else {
+      return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+  };
+
+  // Handle navigation with error catching
   const handleNavigation = (screenName: string) => {
     try {
       navigation.navigate(screenName);
-      console.log(`Navigasi ke ${screenName} berhasil`);
     } catch (error) {
-      console.error(`Error saat navigasi ke ${screenName}:`, error);
-      // Optional: Tampilkan pesan ke pengguna
+      console.error(`Error navigating to ${screenName}:`, error);
       Alert.alert(
         "Kesalahan Navigasi", 
-        `Tidak bisa menuju ke halaman ${screenName}. Silakan coba lagi nanti.`
+        `Tidak bisa menuju ke halaman ${screenName}.`
       );
     }
   };
 
   if (profileLoading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#FFB800" />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView>
-        <LinearGradient colors={["#FFB800", "#FF8A00"]} className="p-6 pt-8 pb-12 rounded-b-3xl">
-          <View className="flex-row justify-between items-center mb-6">
-            <View>
-              <Text className="text-white text-lg">{greeting},</Text>
-              <Text className="text-white text-2xl font-bold">
-                {user?.name || personalData?.nama_lengkap || personelData?.nama_lengkap || "Pengguna"}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => handleNavigation("ProfileTab")}>
-              <Image
-                source={{ uri: "https://placeholder.com/80" }}
-                className="w-12 h-12 rounded-full border-2 border-white"
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View className="bg-white p-4 rounded-xl shadow-md">
-            <Text className="text-gray-700 font-medium mb-2">Status Kebugaran</Text>
-            <View className="flex-row justify-between items-center">
-              <View>
-                <Text className="text-3xl font-bold text-yellow-500">{imtData ? imtData.imt : "-"}</Text>
-                <Text className="text-gray-500">IMT ({imtData ? imtData.status : "Belum ada data"})</Text>
+    <>
+      <StatusBar barStyle={darkMode ? "light-content" : "dark-content"} backgroundColor="transparent" translucent />
+      <SafeAreaView style={[
+        styles.container,
+        { backgroundColor: darkMode ? theme.background.dark : theme.background.light }
+      ]}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Header with gradient */}
+          <LinearGradient 
+            colors={[theme.primary, theme.secondary]} 
+            start={{ x: 0, y: 0 }} 
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
+          >
+            <View style={styles.headerContent}>
+              <View style={styles.headerRow}>
+                <View>
+                  <Text style={styles.greetingText}>{greeting},</Text>
+                  <Text style={styles.nameText}>
+                    {user?.name || personalData?.nama_lengkap || personelData?.nama_lengkap || "Pengguna"}
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => handleNavigation("ProfileTab")}
+                  style={styles.avatarButton}
+                >
+                  <User size={24} color="#FFF" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                className="bg-yellow-500 py-2 px-4 rounded-lg"
+
+              {/* IMT Status Card */}
+              <View style={[
+                styles.imtStatusCard,
+                { backgroundColor: darkMode ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.2)' }
+              ]}>
+                <Text style={styles.imtStatusTitle}>Status Kebugaran</Text>
+                <View style={styles.imtStatusRow}>
+                  <View>
+                    <Text style={styles.imtValue}>
+                      {imtData ? imtData.imt : "-"}
+                    </Text>
+                    <Text style={styles.imtStatus}>
+                      IMT ({imtData ? imtData.status : "Belum ada data"})
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.updateButton, { backgroundColor: theme.accent }]}
+                    onPress={() => handleNavigation("IMTTab")}
+                  >
+                    <Text style={styles.updateButtonText}>Update</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* Main content */}
+          <View style={styles.mainContent}>
+            {/* Stats Card */}
+            <View style={[
+              styles.card,
+              { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
+            ]}>
+              <Text style={[
+                styles.cardTitle,
+                { color: darkMode ? theme.text.onDark : theme.text.primary }
+              ]}>
+                Statistik
+              </Text>
+              
+              <View style={styles.statsGrid}>
+                {/* IMT Stat */}
+                <View style={styles.statHalfColumn}>
+                  <View style={[
+                    styles.statCard,
+                    { backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }
+                  ]}>
+                    <View style={[
+                      styles.statIconContainer,
+                      { backgroundColor: `${theme.primary}20` }
+                    ]}>
+                      <BarChart2 size={20} color={theme.primary} />
+                    </View>
+                    <Text style={[
+                      styles.statLabel,
+                      { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                    ]}>
+                      IMT
+                    </Text>
+                    <Text style={[
+                      styles.statValue,
+                      { color: darkMode ? theme.text.onDark : theme.text.primary }
+                    ]}>
+                      {imtData ? imtData.imt : "-"}
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Weight Stat */}
+                <View style={styles.statHalfColumn}>
+                  <View style={[
+                    styles.statCard,
+                    { backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }
+                  ]}>
+                    <View style={[
+                      styles.statIconContainer,
+                      { backgroundColor: `${theme.accent}20` }
+                    ]}>
+                      <TrendingUp size={20} color={theme.accent} />
+                    </View>
+                    <Text style={[
+                      styles.statLabel,
+                      { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                    ]}>
+                      Berat
+                    </Text>
+                    <Text style={[
+                      styles.statValue,
+                      { color: darkMode ? theme.text.onDark : theme.text.primary }
+                    ]}>
+                      {weightHistory.length > 0 ? `${weightHistory[weightHistory.length - 1].berat_badan} kg` : "-"}
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Training Stat */}
+                <View style={styles.statHalfColumn}>
+                  <View style={[
+                    styles.statCard,
+                    { backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }
+                  ]}>
+                    <View style={[
+                      styles.statIconContainer,
+                      { backgroundColor: `${theme.secondary}20` }
+                    ]}>
+                      <Activity size={20} color={theme.secondary} />
+                    </View>
+                    <Text style={[
+                      styles.statLabel,
+                      { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                    ]}>
+                      Latihan
+                    </Text>
+                    <Text style={[
+                      styles.statValue,
+                      { color: darkMode ? theme.text.onDark : theme.text.primary }
+                    ]}>
+                      {trainingHistory.length}
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Height Stat */}
+                <View style={styles.statHalfColumn}>
+                  <View style={[
+                    styles.statCard,
+                    { backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }
+                  ]}>
+                    <View style={[
+                      styles.statIconContainer,
+                      { backgroundColor: `${theme.primary}20` }
+                    ]}>
+                      <Award size={20} color={theme.primary} />
+                    </View>
+                    <Text style={[
+                      styles.statLabel,
+                      { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                    ]}>
+                      Tinggi
+                    </Text>
+                    <Text style={[
+                      styles.statValue,
+                      { color: darkMode ? theme.text.onDark : theme.text.primary }
+                    ]}>
+                      {personelData?.tinggi_badan ? `${personelData.tinggi_badan} cm` : "-"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+            
+            {/* Chart Card */}
+            {chartData && (
+              <View style={[
+                styles.card,
+                { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
+              ]}>
+                <View style={styles.cardHeaderRow}>
+                  <Text style={[
+                    styles.cardTitle,
+                    { color: darkMode ? theme.text.onDark : theme.text.primary }
+                  ]}>
+                    Tren Berat Badan
+                  </Text>
+                  <TouchableOpacity onPress={() => handleNavigation("IMTTab")}>
+                    <Text style={{ color: theme.primary }}>Lihat Semua</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                <LineChart
+                  data={chartData}
+                  width={screenWidth - 40}
+                  height={220}
+                  chartConfig={{
+                    backgroundColor: darkMode ? theme.background.dark : theme.background.card,
+                    backgroundGradientFrom: darkMode ? theme.background.dark : theme.background.card,
+                    backgroundGradientTo: darkMode ? theme.background.dark : theme.background.card,
+                    decimalPlaces: 0,
+                    color: (opacity = 1) => darkMode ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
+                    labelColor: (opacity = 1) => darkMode ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
+                    style: {
+                      borderRadius: 16,
+                    },
+                    propsForDots: {
+                      r: "6",
+                      strokeWidth: "2",
+                      stroke: theme.primary,
+                    },
+                  }}
+                  bezier
+                  style={styles.chart}
+                />
+              </View>
+            )}
+            
+            {/* Recent Activities */}
+            <View style={[
+              styles.card,
+              { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
+            ]}>
+              <Text style={[
+                styles.cardTitle,
+                { color: darkMode ? theme.text.onDark : theme.text.primary }
+              ]}>
+                Aktivitas Terbaru
+              </Text>
+              
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity, index) => (
+                  <View 
+                    key={index}
+                    style={[
+                      styles.activityItem,
+                      { 
+                        borderBottomWidth: index < recentActivities.length - 1 ? 1 : 0,
+                        borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      }
+                    ]}
+                  >
+                    <View style={[
+                      styles.activityIconContainer,
+                      { backgroundColor: `${theme.primary}20` }
+                    ]}>
+                      {activity.type === 'weight' ? (
+                        <TrendingUp size={24} color={theme.primary} />
+                      ) : (
+                        <Activity size={24} color={theme.primary} />
+                      )}
+                    </View>
+                    
+                    <View style={styles.activityInfo}>
+                      <Text style={[
+                        styles.activityTitle,
+                        { color: darkMode ? theme.text.onDark : theme.text.primary }
+                      ]}>
+                        {activity.type === 'weight' 
+                          ? `Berat Badan: ${activity.value} ${activity.unit}`
+                          : `Latihan: ${activity.name}`
+                        }
+                      </Text>
+                      <Text style={[
+                        styles.activityDate,
+                        { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                      ]}>
+                        {formatDate(activity.date)}
+                      </Text>
+                    </View>
+                    
+                    {activity.type === 'training' && (
+                      <View style={styles.activityStats}>
+                        <Text style={[
+                          styles.caloriesText,
+                          { color: darkMode ? theme.text.onDark : theme.text.primary }
+                        ]}>
+                          {Math.round(activity.calories)} kal
+                        </Text>
+                        <Text style={[
+                          styles.durationText,
+                          { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                        ]}>
+                          {activity.duration} min
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyActivities}>
+                  <History size={40} color={darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
+                  <Text style={[
+                    styles.emptyText,
+                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                  ]}>
+                    Belum ada aktivitas terbaru
+                  </Text>
+                </View>
+              )}
+            </View>
+            
+            {/* Quick Access Menu */}
+            <View style={[
+              styles.card,
+              { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
+            ]}>
+              <Text style={[
+                styles.cardTitle,
+                { color: darkMode ? theme.text.onDark : theme.text.primary }
+              ]}>
+                Menu Cepat
+              </Text>
+              
+              <TouchableOpacity 
+                style={[
+                  styles.menuItem,
+                  { 
+                    borderBottomWidth: 1,
+                    borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                  }
+                ]}
                 onPress={() => handleNavigation("IMTTab")}
               >
-                <Text className="text-white font-medium">Update</Text>
+                <View style={[
+                  styles.menuIconContainer,
+                  { backgroundColor: `${theme.primary}20` }
+                ]}>
+                  <BarChart2 size={24} color={theme.primary} />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={[
+                    styles.menuTitle,
+                    { color: darkMode ? theme.text.onDark : theme.text.primary }
+                  ]}>
+                    Indeks Massa Tubuh
+                  </Text>
+                  <Text style={[
+                    styles.menuDescription,
+                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                  ]}>
+                    Pantau IMT dan berat badan Anda
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[
+                  styles.menuItem,
+                  { 
+                    borderBottomWidth: 1,
+                    borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                  }
+                ]}
+                onPress={() => handleNavigation("TrainingProgramTab")}
+              >
+                <View style={[
+                  styles.menuIconContainer,
+                  { backgroundColor: `${theme.secondary}20` }
+                ]}>
+                  <Activity size={24} color={theme.secondary} />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={[
+                    styles.menuTitle,
+                    { color: darkMode ? theme.text.onDark : theme.text.primary }
+                  ]}>
+                    Program Latihan
+                  </Text>
+                  <Text style={[
+                    styles.menuDescription,
+                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                  ]}>
+                    Pilih dan lakukan latihan kebugaran
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={() => handleNavigation("FoodRecall")}
+              >
+                <View style={[
+                  styles.menuIconContainer,
+                  { backgroundColor: `${theme.accent}20` }
+                ]}>
+                  <Image 
+                    source={{ uri: "https://cdn-icons-png.flaticon.com/512/2771/2771406.png" }} 
+                    style={styles.menuIcon} 
+                  />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={[
+                    styles.menuTitle,
+                    { color: darkMode ? theme.text.onDark : theme.text.primary }
+                  ]}>
+                    Recall Makan
+                  </Text>
+                  <Text style={[
+                    styles.menuDescription,
+                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                  ]}>
+                    Catat asupan makanan harian Anda
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
               </TouchableOpacity>
             </View>
           </View>
-        </LinearGradient>
-
-        <View className="px-6 mt-6">
-          <Text className="text-xl font-bold text-gray-800 mb-4">Statistik</Text>
-
-          <View className="flex-row space-x-4 mb-4">
-            {renderStatCard(
-              "IMT",
-              imtData ? imtData.imt : "-",
-              <BarChart2 size={20} color="#FFB800" />,
-              "bg-yellow-100",
-              "bg-white",
-            )}
-
-            {renderStatCard(
-              "Berat",
-              weightHistory.length > 0 ? `${weightHistory[weightHistory.length - 1].berat_badan} kg` : "-",
-              <TrendingUp size={20} color="#10B981" />,
-              "bg-green-100",
-              "bg-white",
-            )}
-          </View>
-
-          <View className="flex-row space-x-4">
-            {renderStatCard(
-              "Latihan",
-              `${trainingHistory.length}`,
-              <Activity size={20} color="#3B82F6" />,
-              "bg-blue-100",
-              "bg-white",
-            )}
-
-            {renderStatCard(
-              "Tinggi",
-              personelData?.tinggi_badan ? `${personelData.tinggi_badan} cm` : "-",
-              <Award size={20} color="#8B5CF6" />,
-              "bg-purple-100",
-              "bg-white",
-            )}
-          </View>
-        </View>
-
-        <View className="px-6 mt-8">
-          <Text className="text-xl font-bold text-gray-800 mb-4">Menu Cepat</Text>
-
-          <View className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-            <TouchableOpacity
-              className="p-4 border-b border-gray-100 flex-row items-center"
-              onPress={() => handleNavigation("IMTTab")}
-            >
-              <View className="bg-yellow-100 p-2 rounded-lg mr-4">
-                <BarChart2 size={24} color="#FFB800" />
-              </View>
-              <View>
-                <Text className="text-gray-800 font-medium">Indeks Massa Tubuh</Text>
-                <Text className="text-gray-500 text-sm">Pantau IMT dan berat badan Anda</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="p-4 border-b border-gray-100 flex-row items-center"
-              onPress={() => handleNavigation("TrainingProgramTab")}
-            >
-              <View className="bg-blue-100 p-2 rounded-lg mr-4">
-                <Activity size={24} color="#3B82F6" />
-              </View>
-              <View>
-                <Text className="text-gray-800 font-medium">Program Latihan</Text>
-                <Text className="text-gray-500 text-sm">Pilih dan lakukan latihan kebugaran</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              className="p-4 flex-row items-center" 
-              onPress={() => handleNavigation("FoodRecall")}
-            >
-              <View className="bg-green-100 p-2 rounded-lg mr-4">
-                <Image source={{ uri: "https://placeholder.com/24" }} className="w-6 h-6" />
-              </View>
-              <View>
-                <Text className="text-gray-800 font-medium">Recall Makan</Text>
-                <Text className="text-gray-500 text-sm">Catat asupan makanan harian Anda</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  header: {
+    paddingTop: 40,
+    paddingBottom: 70,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30
+  },
+  headerContent: {
+    paddingHorizontal: 20
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  greetingText: {
+    color: '#FFFFFF',
+    fontSize: 16
+  },
+  nameText: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold'
+  },
+  avatarButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF'
+  },
+  imtStatusCard: {
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 20
+  },
+  imtStatusTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginBottom: 8
+  },
+  imtStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  imtValue: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontWeight: 'bold'
+  },
+  imtStatus: {
+    color: 'rgba(255,255,255,0.8)'
+  },
+  updateButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8
+  },
+  updateButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600'
+  },
+  mainContent: {
+    marginTop: -50,
+    paddingHorizontal: 20
+  },
+  card: {
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    marginBottom: 20
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap'
+  },
+  statHalfColumn: {
+    width: '50%',
+    paddingRight: 8,
+    paddingLeft: 8,
+    marginBottom: 16
+  },
+  statCard: {
+    borderRadius: 12,
+    padding: 12
+  },
+  statIconContainer: {
+    padding: 8,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 8
+  },
+  statLabel: {
+    marginBottom: 4
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: 'bold'
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12
+  },
+  activityIconContainer: {
+    padding: 12,
+    borderRadius: 12,
+    marginRight: 12
+  },
+  activityInfo: {
+    flex: 1
+  },
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4
+  },
+  activityDate: {
+    fontSize: 14
+  },
+  activityStats: {
+    alignItems: 'flex-end'
+  },
+  caloriesText: {
+    fontWeight: 'bold'
+  },
+  durationText: {
+    fontSize: 14
+  },
+  emptyActivities: {
+    padding: 20,
+    alignItems: 'center'
+  },
+  emptyText: {
+    marginTop: 10,
+    textAlign: 'center'
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12
+  },
+  menuIconContainer: {
+    padding: 12,
+    borderRadius: 12,
+    marginRight: 16
+  },
+  menuIcon: {
+    width: 24,
+    height: 24
+  },
+  menuTextContainer: {
+    flex: 1
+  },
+  menuTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2
+  },
+  menuDescription: {
+    fontSize: 14
+  }
+});
 
 export default HomeScreen

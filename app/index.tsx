@@ -12,6 +12,7 @@ import { useFonts } from "expo-font"
 import * as SplashScreen from "expo-splash-screen"
 import ErrorBoundary from "./components/ErrorBoundary"
 import { LogBox, View, Text, ActivityIndicator } from "react-native"
+import { ThemeProvider } from "./context/ThemeContext"
 
 // Nonaktifkan warning tentang VirtualizedList di dalam ScrollView
 // Ini bukan solusi ideal, lebih baik memperbaiki kode, tapi dapat membantu selama pengembangan
@@ -62,12 +63,14 @@ export default function App() {
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <Provider store={store}>
-            <StatusBar style="light" />
-            <AppNavigator />
-          </Provider>
-        </SafeAreaProvider>
+        <ThemeProvider>
+          <SafeAreaProvider>
+            <Provider store={store}>
+              <StatusBar style="light" />
+              <AppNavigator />
+            </Provider>
+          </SafeAreaProvider>
+        </ThemeProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
   )
