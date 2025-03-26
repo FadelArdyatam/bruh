@@ -51,7 +51,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
       <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />
-      <Stack>
+      <Stack 
+        screenOptions={{
+          headerShown: false,  // Menyembunyikan semua header
+          // Atau pilihan lain jika ingin tetap menampilkan header tapi tanpa judul:
+          // headerTitle: "",   
+        }}
+      >
+        {/* Konfigurasi route Anda tetap di sini jika ada */}
       </Stack>
       <PortalHost />
     </ThemeProvider>

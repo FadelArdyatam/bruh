@@ -1,13 +1,13 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
-  Image, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
   Alert,
   StatusBar,
   Dimensions,
@@ -20,11 +20,12 @@ import { getUserProfile } from "../../redux/slices/profileSlice"
 import { getWeightData } from "../../redux/slices/imtSlice"
 import { getAllWorkouts } from "../../redux/slices/trainingSlice"
 import { BarChart2, TrendingUp, Activity, Award, User, History, ChevronRight } from "lucide-react-native"
-import { useNavigation } from "@react-navigation/native"
+import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import { LinearGradient } from "expo-linear-gradient"
 import { useTheme } from "../../context/ThemeContext"
 import { LineChart } from "react-native-chart-kit"
+import { HomeScreenSkeleton } from "~/app/components/SkeletonLoaders"
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -33,10 +34,10 @@ const HomeScreen = () => {
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { user } = useSelector((state: RootState) => state.auth)
   const { personalData, isLoading: profileLoading } = useSelector((state: RootState) => state.profile)
-  const { weightHistory } = useSelector((state: RootState) => state.imt)
-  const { trainingHistory } = useSelector((state: RootState) => state.training)
+  const { weightHistory, isLoading: weightLoading } = useSelector((state: RootState) => state.imt)
+  const { trainingHistory, isLoading: trainingLoading } = useSelector((state: RootState) => state.training)
   const { theme, darkMode } = useTheme()
-
+  
   const [greeting, setGreeting] = useState("")
 
   useEffect(() => {
@@ -51,19 +52,44 @@ const HomeScreen = () => {
     else setGreeting("Selamat Malam")
   }, [])
 
+  useFocusEffect(
+    React.useCallback(() => {
+      // Refresh data saat screen mendapatkan fokus
+      dispatch(getWeightData());
+      dispatch(getUserProfile());
+      
+      return () => {
+        // cleanup jika diperlukan
+      };
+    }, [])
+  );
+  
   // Helper function to get person data
   const getPersonelData = () => {
     if (!personalData) return null
     return personalData.personel || null
   }
 
+  // Mendapatkan berat badan terbaru (berdasarkan tanggal)
+  const getLatestWeight = () => {
+    if (weightHistory.length === 0) return null;
+    
+    // Urutkan data berdasarkan tanggal (terbaru di urutan pertama)
+    const sortedData = [...weightHistory].sort(
+      (a, b) => new Date(b.tgl_berat_badan).getTime() - new Date(a.tgl_berat_badan).getTime()
+    );
+    
+    // Ambil berat badan dari data terurut pertama (terbaru)
+    return sortedData[0].berat_badan;
+  }
+
   // Calculate IMT if weight and height data available
   const calculateIMT = () => {
     const personelData = getPersonelData()
     const tinggiBadan = personelData?.tinggi_badan
-    
-    if (weightHistory.length > 0 && tinggiBadan) {
-      const latestWeight = weightHistory[weightHistory.length - 1].berat_badan
+    const latestWeight = getLatestWeight();
+
+    if (latestWeight && tinggiBadan) {
       const height = tinggiBadan / 100 // convert to meters
       const imt = latestWeight / (height * height)
 
@@ -80,6 +106,15 @@ const HomeScreen = () => {
 
   const imtData = calculateIMT()
   const personelData = getPersonelData()
+  const latestWeight = getLatestWeight();
+    // Determine if the screen is still loading data
+  const isLoading = profileLoading || weightLoading || trainingLoading;
+  
+    // If any data is still loading and we don't have cached data, show skeleton
+  if (isLoading || (!personalData || weightHistory.length === 0)) {
+      return <HomeScreenSkeleton />;
+  }  
+  
 
   // Prepare weight history data for chart
   const prepareChartData = () => {
@@ -108,18 +143,27 @@ const HomeScreen = () => {
     }
   }
 
+  // Menghitung lebar grafik berdasarkan jumlah data
+  const calculateChartWidth = (dataPoints: number) => {
+    // Minimal lebar per titik data (dapat disesuaikan)
+    const minWidthPerPoint = 50;
+    
+    // Hitung lebar berdasarkan jumlah titik data, minimal sama dengan lebar layar
+    return Math.max(screenWidth - 40, dataPoints * minWidthPerPoint);
+  }
+
   const chartData = prepareChartData()
 
   // Recent activities
   const getRecentActivities = () => {
     const activities: { type: string; date: Date; value?: number; unit?: string; name?: any; duration?: any; calories?: any }[] = [];
-    
+
     // Add recent weight entries
     if (weightHistory && weightHistory.length > 0) {
       const recentWeights = [...weightHistory]
         .sort((a, b) => new Date(b.tgl_berat_badan).getTime() - new Date(a.tgl_berat_badan).getTime())
         .slice(0, 2);
-        
+
       recentWeights.forEach(weight => {
         activities.push({
           type: 'weight',
@@ -129,11 +173,11 @@ const HomeScreen = () => {
         });
       });
     }
-    
+
     // Add recent training sessions
     if (trainingHistory && trainingHistory.length > 0) {
       const recentTrainings = [...trainingHistory].slice(0, 2);
-      
+
       recentTrainings.forEach(training => {
         activities.push({
           type: 'training',
@@ -144,7 +188,7 @@ const HomeScreen = () => {
         });
       });
     }
-    
+
     // Sort by date
     return activities.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 3);
   };
@@ -156,7 +200,7 @@ const HomeScreen = () => {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       return 'Hari ini';
     } else if (diffDays === 1) {
@@ -173,7 +217,7 @@ const HomeScreen = () => {
     } catch (error) {
       console.error(`Error navigating to ${screenName}:`, error);
       Alert.alert(
-        "Kesalahan Navigasi", 
+        "Kesalahan Navigasi",
         `Tidak bisa menuju ke halaman ${screenName}.`
       );
     }
@@ -196,9 +240,9 @@ const HomeScreen = () => {
       ]}>
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Header with gradient */}
-          <LinearGradient 
-            colors={[theme.primary, theme.secondary]} 
-            start={{ x: 0, y: 0 }} 
+          <LinearGradient
+            colors={[theme.primary, theme.secondary]}
+            start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.header}
           >
@@ -210,7 +254,7 @@ const HomeScreen = () => {
                     {user?.name || personalData?.nama_lengkap || personelData?.nama_lengkap || "Pengguna"}
                   </Text>
                 </View>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => handleNavigation("ProfileTab")}
                   style={styles.avatarButton}
                 >
@@ -257,7 +301,7 @@ const HomeScreen = () => {
               ]}>
                 Statistik
               </Text>
-              
+
               <View style={styles.statsGrid}>
                 {/* IMT Stat */}
                 <View style={styles.statHalfColumn}>
@@ -285,7 +329,7 @@ const HomeScreen = () => {
                     </Text>
                   </View>
                 </View>
-                
+
                 {/* Weight Stat */}
                 <View style={styles.statHalfColumn}>
                   <View style={[
@@ -308,11 +352,11 @@ const HomeScreen = () => {
                       styles.statValue,
                       { color: darkMode ? theme.text.onDark : theme.text.primary }
                     ]}>
-                      {weightHistory.length > 0 ? `${weightHistory[weightHistory.length - 1].berat_badan} kg` : "-"}
+                      {latestWeight ? `${latestWeight} kg` : "-"}
                     </Text>
                   </View>
                 </View>
-                
+
                 {/* Training Stat */}
                 <View style={styles.statHalfColumn}>
                   <View style={[
@@ -339,7 +383,7 @@ const HomeScreen = () => {
                     </Text>
                   </View>
                 </View>
-                
+
                 {/* Height Stat */}
                 <View style={styles.statHalfColumn}>
                   <View style={[
@@ -368,7 +412,7 @@ const HomeScreen = () => {
                 </View>
               </View>
             </View>
-            
+
             {/* Chart Card */}
             {chartData && (
               <View style={[
@@ -386,33 +430,47 @@ const HomeScreen = () => {
                     <Text style={{ color: theme.primary }}>Lihat Semua</Text>
                   </TouchableOpacity>
                 </View>
-                
-                <LineChart
-                  data={chartData}
-                  width={screenWidth - 40}
-                  height={220}
-                  chartConfig={{
-                    backgroundColor: darkMode ? theme.background.dark : theme.background.card,
-                    backgroundGradientFrom: darkMode ? theme.background.dark : theme.background.card,
-                    backgroundGradientTo: darkMode ? theme.background.dark : theme.background.card,
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => darkMode ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
-                    labelColor: (opacity = 1) => darkMode ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                    propsForDots: {
-                      r: "6",
-                      strokeWidth: "2",
-                      stroke: theme.primary,
-                    },
-                  }}
-                  bezier
-                  style={styles.chart}
-                />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={true}
+                  contentContainerStyle={{ paddingRight: 20 }}
+                >
+                  <LineChart
+                    data={chartData}
+                    width={calculateChartWidth(chartData.labels.length)}
+                    height={220}
+                    chartConfig={{
+                      backgroundColor: darkMode ? theme.background.dark : theme.background.card,
+                      backgroundGradientFrom: darkMode ? theme.background.dark : theme.background.card,
+                      backgroundGradientTo: darkMode ? theme.background.dark : theme.background.card,
+                      decimalPlaces: 0,
+                      color: (opacity = 1) => darkMode ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
+                      labelColor: (opacity = 1) => darkMode ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
+                      style: {
+                        borderRadius: 16,
+                      },
+                      propsForDots: {
+                        r: "6",
+                        strokeWidth: "2",
+                        stroke: theme.primary,
+                      },
+                    }}
+                    bezier
+                    style={styles.chart}
+                  />
+                </ScrollView>
+                {/* Petunjuk scroll horizontal */}
+                {chartData.labels.length > 5 && (
+                  <Text style={[
+                    styles.chartScrollHint,
+                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                  ]}>
+                    Geser ke kanan atau kiri untuk melihat semua data
+                  </Text>
+                )}
               </View>
             )}
-            
+
             {/* Recent Activities */}
             <View style={[
               styles.card,
@@ -424,14 +482,14 @@ const HomeScreen = () => {
               ]}>
                 Aktivitas Terbaru
               </Text>
-              
+
               {recentActivities.length > 0 ? (
                 recentActivities.map((activity, index) => (
-                  <View 
+                  <View
                     key={index}
                     style={[
                       styles.activityItem,
-                      { 
+                      {
                         borderBottomWidth: index < recentActivities.length - 1 ? 1 : 0,
                         borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
                       }
@@ -447,13 +505,13 @@ const HomeScreen = () => {
                         <Activity size={24} color={theme.primary} />
                       )}
                     </View>
-                    
+
                     <View style={styles.activityInfo}>
                       <Text style={[
                         styles.activityTitle,
                         { color: darkMode ? theme.text.onDark : theme.text.primary }
                       ]}>
-                        {activity.type === 'weight' 
+                        {activity.type === 'weight'
                           ? `Berat Badan: ${activity.value} ${activity.unit}`
                           : `Latihan: ${activity.name}`
                         }
@@ -465,7 +523,7 @@ const HomeScreen = () => {
                         {formatDate(activity.date)}
                       </Text>
                     </View>
-                    
+
                     {activity.type === 'training' && (
                       <View style={styles.activityStats}>
                         <Text style={[
@@ -496,7 +554,7 @@ const HomeScreen = () => {
                 </View>
               )}
             </View>
-            
+
             {/* Quick Access Menu */}
             <View style={[
               styles.card,
@@ -508,11 +566,11 @@ const HomeScreen = () => {
               ]}>
                 Menu Cepat
               </Text>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[
                   styles.menuItem,
-                  { 
+                  {
                     borderBottomWidth: 1,
                     borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                   }
@@ -541,11 +599,11 @@ const HomeScreen = () => {
                 </View>
                 <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[
                   styles.menuItem,
-                  { 
+                  {
                     borderBottomWidth: 1,
                     borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                   }
@@ -574,8 +632,8 @@ const HomeScreen = () => {
                 </View>
                 <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => handleNavigation("FoodRecall")}
               >
@@ -583,9 +641,9 @@ const HomeScreen = () => {
                   styles.menuIconContainer,
                   { backgroundColor: `${theme.accent}20` }
                 ]}>
-                  <Image 
-                    source={{ uri: "https://cdn-icons-png.flaticon.com/512/2771/2771406.png" }} 
-                    style={styles.menuIcon} 
+                  <Image
+                    source={{ uri: "https://cdn-icons-png.flaticon.com/512/2771/2771406.png" }}
+                    style={styles.menuIcon}
                   />
                 </View>
                 <View style={styles.menuTextContainer}>
@@ -742,6 +800,12 @@ const styles = StyleSheet.create({
   chart: {
     marginVertical: 8,
     borderRadius: 16
+  },
+  chartScrollHint: {
+    textAlign: 'center',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 8
   },
   activityItem: {
     flexDirection: 'row',

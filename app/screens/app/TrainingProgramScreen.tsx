@@ -36,6 +36,7 @@ import YoutubePlayer from "react-native-youtube-iframe"
 import { LinearGradient } from "expo-linear-gradient"
 import { useTheme } from "../../context/ThemeContext"
 import { getWorkoutIcon, getActivityIcon, getWorkoutIconBackground, isHighIntensityWorkout } from "../../../assets/Icon/WorkoutIcon"
+import { TrainingProgramScreenSkeleton } from "~/app/components/SkeletonLoaders"
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -51,6 +52,10 @@ const TrainingProgramScreen = () => {
   const [playing, setPlaying] = useState(false)
   const [selectedTab, setSelectedTab] = useState("high")
   const [searchQuery, setSearchQuery] = useState("")
+
+  if(isLoading){
+    <TrainingProgramScreenSkeleton/>
+  }
 
   useEffect(() => {
     dispatch(getAllWorkouts())

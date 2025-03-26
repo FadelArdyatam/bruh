@@ -13,7 +13,8 @@ import {
   Platform,
   StyleSheet,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  Image
 } from "react-native"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
@@ -21,6 +22,8 @@ import { getAllFood, submitFoodSuggestion, saveFoodRecall } from "../../redux/sl
 import { ArrowLeft, Save, Plus, Minus, Search, X } from "lucide-react-native"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
+import { useTheme } from "../../context/ThemeContext"
+import { FoodRecallScreenSkeleton } from "~/app/components/SkeletonLoaders"
 
 // Tipe data untuk makanan
 interface Food {
@@ -30,11 +33,48 @@ interface Food {
   volume: string;
 }
 
+// Fungsi untuk mendapatkan gambar makanan berdasarkan nama
+const getFoodImage = (foodName: string) => {
+  // Daftar kategori makanan untuk menentukan gambar
+  const categories = {
+    nasi: "https://cdn-icons-png.flaticon.com/512/2082/2082063.png",
+    ayam: "https://cdn-icons-png.flaticon.com/512/1046/1046751.png",
+    ikan: "https://cdn-icons-png.flaticon.com/512/2133/2133493.png",
+    daging: "https://cdn-icons-png.flaticon.com/512/2515/2515183.png",
+    roti: "https://cdn-icons-png.flaticon.com/512/3075/3075977.png",
+    sayur: "https://cdn-icons-png.flaticon.com/512/2153/2153786.png",
+    buah: "https://cdn-icons-png.flaticon.com/512/3194/3194591.png",
+    susu: "https://cdn-icons-png.flaticon.com/512/3050/3050158.png",
+    kopi: "https://cdn-icons-png.flaticon.com/512/751/751621.png",
+    teh: "https://cdn-icons-png.flaticon.com/512/2302/2302566.png",
+    jus: "https://cdn-icons-png.flaticon.com/512/3137/3137140.png",
+    air: "https://cdn-icons-png.flaticon.com/512/824/824239.png",
+    keripik: "https://cdn-icons-png.flaticon.com/512/2553/2553691.png",
+    coklat: "https://cdn-icons-png.flaticon.com/512/2413/2413328.png",
+    kue: "https://cdn-icons-png.flaticon.com/512/992/992771.png",
+    telur: "https://cdn-icons-png.flaticon.com/512/837/837560.png",
+    default: "https://cdn-icons-png.flaticon.com/512/1147/1147805.png"
+  }
+  
+  // Cek nama makanan mengandung kata kunci
+  const lowercaseName = foodName.toLowerCase();
+  
+  for (const [category, url] of Object.entries(categories)) {
+    if (lowercaseName.includes(category)) {
+      return url;
+    }
+  }
+  
+  // Jika tidak cocok dengan kategori, gunakan default
+  return categories.default;
+}
+
 const FoodRecallScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { foodList, isLoading } = useSelector((state: RootState) => state.food)
   const scrollViewRef = useRef<ScrollView>(null);
+  const { theme, darkMode } = useTheme?.() || { theme: null, darkMode: false };
 
   const [activeDay, setActiveDay] = useState<"wednesday" | "sunday">("wednesday")
   const [searchQuery, setSearchQuery] = useState("")
@@ -47,6 +87,10 @@ const FoodRecallScreen = () => {
     volume: "porsi",
     satuan: "1",
   })
+
+  if(isLoading){
+    <FoodRecallScreenSkeleton/>
+  }
 
   useEffect(() => {
     dispatch(getAllFood())
@@ -147,7 +191,13 @@ const FoodRecallScreen = () => {
       return (
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionHeaderText}>Makanan Terpilih</Text>
-          <Text style={styles.emptyListText}>Belum ada makanan yang dipilih</Text>
+          <View style={styles.emptySelectedState}>
+            <Image 
+              source={{ uri: "https://cdn-icons-png.flaticon.com/512/5445/5445197.png" }}
+              style={styles.emptyStateImage}
+            />
+            <Text style={styles.emptyListText}>Belum ada makanan yang dipilih</Text>
+          </View>
         </View>
       );
     }
@@ -157,11 +207,15 @@ const FoodRecallScreen = () => {
         <Text style={styles.sectionHeaderText}>Makanan Terpilih</Text>
         {selectedFoods.map((food) => (
           <View key={food.id} style={styles.selectedFoodItem}>
+            <Image
+              source={{ uri: getFoodImage(food.nama_makanan) }}
+              style={styles.selectedFoodImage}
+            />
             <View style={styles.selectedFoodInfo}>
               <Text style={styles.foodName}>{food.nama_makanan}</Text>
               <Text style={styles.foodInfo}>
                 {food.kalori} kal/{food.volume} × {quantities[food.id] || 1} ={" "}
-                {Number.parseFloat(food.kalori) * (quantities[food.id] || 1)} kal
+                {Math.round(Number.parseFloat(food.kalori) * (quantities[food.id] || 1))} kal
               </Text>
             </View>
             <View style={styles.quantityControls}>
@@ -198,6 +252,28 @@ const FoodRecallScreen = () => {
     );
   };
 
+  // Render food item untuk FlatList
+  const renderFoodItem = ({ item }: { item: Food }) => (
+    <TouchableOpacity
+      style={styles.foodItem}
+      onPress={() => handleSelectFood(item)}
+    >
+      <Image
+        source={{ uri: getFoodImage(item.nama_makanan) }}
+        style={styles.foodImage}
+      />
+      <View style={styles.foodTextContainer}>
+        <Text style={styles.foodName}>{item.nama_makanan}</Text>
+        <Text style={styles.foodInfo}>
+          {item.kalori} kal/{item.volume}
+        </Text>
+      </View>
+      <View style={styles.addFoodButtonContainer}>
+        <Plus size={20} color="#FFB800" />
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView 
@@ -211,8 +287,8 @@ const FoodRecallScreen = () => {
             onPress={() => {
               if (navigation.canGoBack()) {
                 navigation.goBack()
-              }else{
-                navigation.navigate("Home")
+              } else {
+                navigation.navigate("HomeTab")
               }
             }}
           >
@@ -336,24 +412,19 @@ const FoodRecallScreen = () => {
                 <FlatList
                   data={filteredFoodList}
                   keyExtractor={(item) => item.id.toString()}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.foodItem}
-                      onPress={() => handleSelectFood(item)}
-                    >
-                      <View>
-                        <Text style={styles.foodName}>{item.nama_makanan}</Text>
-                        <Text style={styles.foodInfo}>
-                          {item.kalori} kal/{item.volume}
-                        </Text>
-                      </View>
-                      <Plus size={20} color="#FFB800" />
-                    </TouchableOpacity>
-                  )}
+                  renderItem={renderFoodItem}
                   ListEmptyComponent={
-                    <Text style={styles.emptyListText}>
-                      {searchQuery ? "Tidak ada makanan yang sesuai" : "Tidak ada data makanan"}
-                    </Text>
+                    <View style={styles.emptyStateContainer}>
+                      <Image 
+                        source={{ uri: "https://cdn-icons-png.flaticon.com/512/7486/7486754.png" }}
+                        style={styles.emptyStateImage}
+                      />
+                      <Text style={styles.emptyListText}>
+                        {searchQuery 
+                          ? "Tidak ada makanan yang sesuai dengan pencarian" 
+                          : "Tidak ada data makanan tersedia"}
+                      </Text>
+                    </View>
                   }
                   nestedScrollEnabled={true}
                   scrollEnabled={true}
@@ -464,8 +535,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: 12,
+    padding: 12,
     backgroundColor: '#f9fafb',
     marginBottom: 16,
   },
@@ -473,10 +544,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     padding: 4,
+    fontSize: 16,
   },
   sectionContainer: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
@@ -499,15 +571,20 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#EBF5FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   addButtonText: {
     color: '#3B82F6',
     marginLeft: 4,
+    fontWeight: '500',
   },
   addFoodForm: {
     backgroundColor: '#f3f4f6',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 16,
   },
   formLabel: {
@@ -522,25 +599,27 @@ const styles = StyleSheet.create({
   formInput: {
     borderWidth: 1,
     borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: 12,
+    padding: 12,
     backgroundColor: 'white',
+    fontSize: 16,
   },
   submitButton: {
     backgroundColor: '#3B82F6',
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
   },
   submitButtonText: {
     color: 'white',
     fontWeight: '600',
+    fontSize: 16,
   },
   foodListContainer: {
-    height: 200,
+    height: 240,
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 8,
+    borderRadius: 12,
     marginVertical: 8,
     backgroundColor: '#f9fafb',
   },
@@ -549,27 +628,61 @@ const styles = StyleSheet.create({
   },
   foodItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
     backgroundColor: 'white',
+  },
+  foodImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  foodTextContainer: {
+    flex: 1,
   },
   foodName: {
     fontWeight: '600',
     fontSize: 16,
     color: '#1f2937',
+    marginBottom: 2,
   },
   foodInfo: {
     color: '#6b7280',
     fontSize: 14,
   },
+  addFoodButtonContainer: {
+    backgroundColor: '#FEF3C7',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   emptyListText: {
     textAlign: 'center',
     color: '#6b7280',
-    padding: 16,
+    fontSize: 14,
+    marginTop: 8,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  emptySelectedState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+  },
+  emptyStateImage: {
+    width: 80,
+    height: 80,
+    opacity: 0.6,
   },
   selectedFoodItem: {
     flexDirection: 'row',
@@ -579,6 +692,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
+  selectedFoodImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 12,
+  },
   selectedFoodInfo: {
     flex: 1,
   },
@@ -587,25 +706,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   quantityButton: {
-    padding: 4,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 16,
+    padding: 6,
   },
   quantityText: {
     marginHorizontal: 8,
     fontWeight: '600',
+    fontSize: 16,
   },
   removeButton: {
     marginLeft: 8,
-    padding: 4,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 16,
+    padding: 6,
   },
   totalCalories: {
     backgroundColor: '#FFFBEB',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   totalCaloriesLabel: {
     fontWeight: '600',
-    color: '#4b5563',
+    color: '#92400E',
+    fontSize: 16,
   },
   totalCaloriesValue: {
     fontSize: 24,
@@ -629,7 +757,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFB800',
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -15,6 +15,7 @@ import type { StackNavigationProp } from "@react-navigation/stack"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import Svg, { Circle, Text as SvgText, Path, G } from 'react-native-svg'
 import { LinearGradient } from "expo-linear-gradient"
+import { IMTScreenSkeleton } from "~/app/components/SkeletonLoaders"
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -69,6 +70,10 @@ const IMTScreen = () => {
 
     const formattedDate = currentDate.toISOString().split("T")[0] // YYYY-MM-DD
     setSelectedDate(formattedDate)
+  }
+
+  if(isLoading){
+    <IMTScreenSkeleton/>
   }
 
   // Helper function untuk mengakses data personel
@@ -185,6 +190,15 @@ const IMTScreen = () => {
       ],
     }
   }
+  
+  // Menambahkan fungsi untuk menghitung lebar grafik berdasarkan jumlah data
+  const calculateChartWidth = (dataPoints: number) => {
+    // Minimal lebar per titik data (dapat disesuaikan)
+    const minWidthPerPoint = 50;
+    
+    // Hitung lebar berdasarkan jumlah titik data, minimal sama dengan lebar layar
+    return Math.max(screenWidth - 60, dataPoints * minWidthPerPoint);
+  }
 
   const currentIMT = getCurrentIMT()
   const chartData = prepareChartData()
@@ -296,32 +310,47 @@ const IMTScreen = () => {
           {chartData && (
             <View className="mb-4">
               <Text className="text-gray-800 font-bold mb-2">Grafik Berat Badan</Text>
-              <LineChart
-                data={chartData}
-                width={screenWidth - 60}
-                height={220}
-                chartConfig={{
-                  backgroundColor: "#ffffff",
-                  backgroundGradientFrom: "#ffffff",
-                  backgroundGradientTo: "#ffffff",
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(255, 184, 0, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  style: {
+              
+              {/* Container ScrollView horizontal untuk grafik yang bisa di-scroll */}
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={true}
+                contentContainerStyle={{ paddingRight: 20 }}
+              >
+                <LineChart
+                  data={chartData}
+                  width={calculateChartWidth(chartData.labels.length)}
+                  height={220}
+                  chartConfig={{
+                    backgroundColor: "#ffffff",
+                    backgroundGradientFrom: "#ffffff",
+                    backgroundGradientTo: "#ffffff",
+                    decimalPlaces: 0,
+                    color: (opacity = 1) => `rgba(255, 184, 0, ${opacity})`,
+                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                    style: {
+                      borderRadius: 16,
+                    },
+                    propsForDots: {
+                      r: "6",
+                      strokeWidth: "2",
+                      stroke: "#FFB800",
+                    },
+                  }}
+                  bezier
+                  style={{
+                    marginVertical: 8,
                     borderRadius: 16,
-                  },
-                  propsForDots: {
-                    r: "6",
-                    strokeWidth: "2",
-                    stroke: "#FFB800",
-                  },
-                }}
-                bezier
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 16,
-                }}
-              />
+                  }}
+                />
+              </ScrollView>
+              
+              {/* Petunjuk scroll horizontall */}
+              {chartData.labels.length > 5 && (
+                <Text className="text-center text-gray-500 mt-2 italic text-xs">
+                  Geser ke kanan atau kiri untuk melihat semua data
+                </Text>
+              )}
             </View>
           )}
 

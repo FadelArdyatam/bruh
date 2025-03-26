@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
 import { getUserProfile } from "../../redux/slices/profileSlice"
+import { getAllPangkat } from "../../redux/slices/profileSlice"
 import { logoutUser } from "../../redux/slices/authSlice"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
@@ -39,21 +40,27 @@ import {
 } from "lucide-react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useTheme } from "../../context/ThemeContext"
+import { ProfileScreenSkeleton } from "~/app/components/SkeletonLoaders"
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { user } = useSelector((state: RootState) => state.auth)
   const { personalData, isLoading: profileLoading, error } = useSelector((state: RootState) => state.profile)
+  const { pangkatList, isLoading} = useSelector ((state: RootState) => state.profile)
   const { theme, darkMode } = useTheme()
 
   const [refreshing, setRefreshing] = useState(false)
   const [showMoreInfo, setShowMoreInfo] = useState(false)
   const fadeAnim = useState(new Animated.Value(0))[0]
 
+  if(profileLoading && !personalData){
+    <ProfileScreenSkeleton/>
+  }
+
   useEffect(() => {
     fetchUserProfile()
-    
+
     // Animation
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -65,6 +72,7 @@ const ProfileScreen = () => {
   const fetchUserProfile = async () => {
     try {
       await dispatch(getUserProfile()).unwrap()
+      await dispatch(getAllPangkat()).unwrap()
     } catch (err) {
       console.error("Error mengambil data profil:", err)
     }
@@ -105,6 +113,15 @@ const ProfileScreen = () => {
     
     return personalData
   }
+  
+  const getUserPangkat = () => {
+    if (!personelData || !pangkatList || pangkatList.length === 0) return null;
+
+    const pangkatId = personelData.id_pangkat;
+    return pangkatList.find (p => p.id === pangkatId);
+  }
+
+  const userPangkat = getUserPangkat()
 
   // Format tanggal lahir ke format yang lebih sederhana (YYYY-MM-DD)
   const formatBirthDate = (birthDate: string) => {
@@ -151,7 +168,7 @@ const ProfileScreen = () => {
 
   const personelData = getPersonelData()
   const satuanKerja = personelData?.satuan_kerja || {}
-  const pangkat = personelData?.pangkat || {}
+  const pangkat = getUserPangkat()
 
   // Format nomor HP dengan memastikan data valid
   const formatPhoneNumber = (phone: string | undefined | null) => {
@@ -172,10 +189,7 @@ const ProfileScreen = () => {
 
   if (profileLoading && !personelData) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme?.primary || "#FFB800"} />
-        <Text style={styles.loadingText}>Memuat Profil...</Text>
-      </View>
+      <ProfileScreenSkeleton/>
     )
   }
 
