@@ -6,7 +6,6 @@ import {
   Text, 
   ScrollView, 
   TouchableOpacity, 
-  Image, 
   ActivityIndicator, 
   Alert,
   RefreshControl,
@@ -17,13 +16,10 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
 import { getUserProfile } from "../../redux/slices/profileSlice"
-import { getAllPangkat } from "../../redux/slices/profileSlice"
 import { logoutUser } from "../../redux/slices/authSlice"
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import {
-  User,
-  Edit,
   Lock,
   LogOut,
   ChevronRight,
@@ -36,31 +32,28 @@ import {
   Award,
   Ruler,
   Heart,
-  Settings
+  Settings,
+  User,
+  Edit
 } from "lucide-react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useTheme } from "../../context/ThemeContext"
-import { ProfileScreenSkeleton } from "~/app/components/SkeletonLoaders"
+import ProfilePhotoPicker from "../../components/profilePhotoPicker"
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigation = useNavigation<StackNavigationProp<any>>()
   const { user } = useSelector((state: RootState) => state.auth)
   const { personalData, isLoading: profileLoading, error } = useSelector((state: RootState) => state.profile)
-  const { pangkatList, isLoading} = useSelector ((state: RootState) => state.profile)
   const { theme, darkMode } = useTheme()
 
   const [refreshing, setRefreshing] = useState(false)
   const [showMoreInfo, setShowMoreInfo] = useState(false)
   const fadeAnim = useState(new Animated.Value(0))[0]
 
-  if(profileLoading && !personalData){
-    <ProfileScreenSkeleton/>
-  }
-
   useEffect(() => {
     fetchUserProfile()
-
+    
     // Animation
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -72,7 +65,6 @@ const ProfileScreen = () => {
   const fetchUserProfile = async () => {
     try {
       await dispatch(getUserProfile()).unwrap()
-      await dispatch(getAllPangkat()).unwrap()
     } catch (err) {
       console.error("Error mengambil data profil:", err)
     }
@@ -113,15 +105,26 @@ const ProfileScreen = () => {
     
     return personalData
   }
-  
-  const getUserPangkat = () => {
-    if (!personelData || !pangkatList || pangkatList.length === 0) return null;
 
-    const pangkatId = personelData.id_pangkat;
-    return pangkatList.find (p => p.id === pangkatId);
+  // Mendapatkan URL foto profil
+  const getProfilePhotoUrl = () => {
+    const personelData = getPersonelData();
+    
+    if (!personelData) return null;
+    
+    // Jika ada profile_photo_url langsung, gunakan itu
+    if (personelData.profile_photo_url) {
+      return personelData.profile_photo_url;
+    }
+    
+    // Jika hanya ada profile_photo (path), dan API_URL tersedia
+    if (personelData.profile_photo) {
+      // Anda perlu menyesuaikan ini sesuai dengan struktur URL API Anda
+      return `https://demo.sosiogrow.my.id/storage/${personelData.profile_photo}`;
+    }
+    
+    return null;
   }
-
-  const userPangkat = getUserPangkat()
 
   // Format tanggal lahir ke format yang lebih sederhana (YYYY-MM-DD)
   const formatBirthDate = (birthDate: string) => {
@@ -168,7 +171,8 @@ const ProfileScreen = () => {
 
   const personelData = getPersonelData()
   const satuanKerja = personelData?.satuan_kerja || {}
-  const pangkat = getUserPangkat()
+  const pangkat = personelData?.pangkat || {}
+  const profilePhotoUrl = getProfilePhotoUrl();
 
   // Format nomor HP dengan memastikan data valid
   const formatPhoneNumber = (phone: string | undefined | null) => {
@@ -189,7 +193,10 @@ const ProfileScreen = () => {
 
   if (profileLoading && !personelData) {
     return (
-      <ProfileScreenSkeleton/>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme?.primary || "#FFB800"} />
+        <Text style={styles.loadingText}>Memuat Profil...</Text>
+      </View>
     )
   }
 
@@ -231,24 +238,12 @@ const ProfileScreen = () => {
           <View style={styles.headerContent}>
             {/* User Info Section */}
             <View style={styles.userInfoContainer}>
-              <View style={styles.avatarContainer}>
-                {personelData?.foto_profil ? (
-                  <Image
-                    source={{ uri: personelData.foto_profil }}
-                    style={styles.avatar}
-                  />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <User size={40} color="#FFF" />
-                  </View>
-                )}
-                <TouchableOpacity
-                  style={styles.editAvatarButton}
-                  onPress={() => Alert.alert("Info", "Fitur upload foto profil akan segera hadir!")}
-                >
-                  <Edit size={14} color="#FFB800" />
-                </TouchableOpacity>
-              </View>
+              {/* Menggunakan ProfilePhotoPicker disini sebagai pengganti avatar */}
+              <ProfilePhotoPicker 
+                photoUrl={profilePhotoUrl}
+                size={80}
+                onPhotoUpdated={fetchUserProfile}
+              />
 
               <View style={styles.userInfo}>
                 <Text style={styles.userName}>
