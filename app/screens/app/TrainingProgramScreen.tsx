@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
-import { getAllWorkouts, getWorkoutDetail, saveTrainingSession } from "../../redux/slices/trainingSlice"
+import { getAllWorkouts, getWorkoutDetail, saveTrainingSession } from "../../redux/slices/workoutSlice"
 import { 
   Save, 
   Clock, 

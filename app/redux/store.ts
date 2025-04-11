@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit"
 import authReducer from "./slices/authSlice"
 import profileReducer from "./slices/profileSlice"
 import imtReducer from "./slices/imtSlice"
-import trainingReducer from "./slices/trainingSlice"
+import trainingReducer from "./slices/workoutSlice"
 import foodReducer from "./slices/foodSlice"
 import workoutScheduleReducer from "./slices/workoutScheduleSlice"
 

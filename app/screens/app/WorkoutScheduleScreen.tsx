@@ -1,5 +1,3 @@
-// app/screens/app/WorkoutScheduleScreen.tsx
-"use client"
 
 import React, { useState, useEffect } from "react"
 import {
@@ -18,7 +16,7 @@ import {
   getAllWorkoutSchedules,
   deleteWorkoutSchedule,
 } from "../../redux/slices/workoutScheduleSlice"
-import { getAllWorkouts } from "../../redux/slices/trainingSlice"
+import { getAllWorkouts } from "../../redux/slices/workoutSlice"
 import {
   ArrowLeft,
   Plus,
