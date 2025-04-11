@@ -9,6 +9,8 @@ interface ProfileState {
   childSatuanKerjaList: any[]
   isLoading: boolean
   error: string | null
+  isUploadingPhoto: boolean
+  photoUploadError: string | null
 }
 
 const initialState: ProfileState = {
@@ -19,6 +21,8 @@ const initialState: ProfileState = {
   childSatuanKerjaList: [],
   isLoading: false,
   error: null,
+  isUploadingPhoto: false,
+  photoUploadError: null,
 }
 
 export const getUserProfile = createAsyncThunk("profile/getUserProfile", async (_, { rejectWithValue }) => {
@@ -55,6 +59,21 @@ export const updateUserProfile = createAsyncThunk(
       return rejectWithValue(error.message)
     }
   },
+)
+
+export const updateProfilePhoto = createAsyncThunk(
+  "profile/updateProfilePhoto",
+  async (
+    { photo, removePhoto = false }: { photo: { uri: string, type?: string, fileName?: string } | null, removePhoto?: boolean },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await userService.updateProfilePhoto(photo, removePhoto)
+      return response
+    } catch (error: any) {
+      return rejectWithValue(error.message)
+    }
+  }
 )
 
 export const getAllPangkat = createAsyncThunk("profile/getAllPangkat", async (_, { rejectWithValue }) => {
@@ -103,6 +122,9 @@ const profileSlice = createSlice({
     clearProfileError: (state) => {
       state.error = null
     },
+    clearPhotoUploadError: (state) => {
+      state.photoUploadError = null
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -136,6 +158,42 @@ const profileSlice = createSlice({
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload as string
+      })
+      // Update Profile Photo
+      .addCase(updateProfilePhoto.pending, (state) => {
+        state.isUploadingPhoto = true
+        state.photoUploadError = null
+      })
+      .addCase(updateProfilePhoto.fulfilled, (state, action) => {
+        state.isUploadingPhoto = false
+        
+        // Update foto profil di state.personalData jika ada
+        if (state.personalData) {
+          // Jika response berisi profile_photo_url
+          if (action.payload.profile_photo_url) {
+            if (state.personalData.personel) {
+              state.personalData.personel.profile_photo = action.payload.profile_photo
+              state.personalData.personel.profile_photo_url = action.payload.profile_photo_url
+            } else {
+              state.personalData.profile_photo = action.payload.profile_photo
+              state.personalData.profile_photo_url = action.payload.profile_photo_url
+            }
+          } 
+          // Jika foto dihapus
+          else if (action.payload.message?.includes('removed')) {
+            if (state.personalData.personel) {
+              state.personalData.personel.profile_photo = null
+              state.personalData.personel.profile_photo_url = null
+            } else {
+              state.personalData.profile_photo = null
+              state.personalData.profile_photo_url = null
+            }
+          }
+        }
+      })
+      .addCase(updateProfilePhoto.rejected, (state, action) => {
+        state.isUploadingPhoto = false
+        state.photoUploadError = action.payload as string
       })
       // Get All Pangkat
       .addCase(getAllPangkat.pending, (state) => {
@@ -192,5 +250,5 @@ const profileSlice = createSlice({
   },
 })
 
-export const { clearProfileError } = profileSlice.actions
+export const { clearProfileError, clearPhotoUploadError } = profileSlice.actions
 export default profileSlice.reducer

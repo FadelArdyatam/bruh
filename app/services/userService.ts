@@ -64,20 +64,103 @@ const getUserProfile = async () => {
 const updateUserProfile = async (userData: any) => {
   try {
     console.log("Mengirim data update profil:", userData)
-    const response = await api.post("/users/update", userData)
-    console.log("Response updateUserProfile:", response.status)
+    
+    // Gunakan FormData jika ada foto profil
+    if (userData.profile_photo) {
+      const formData = new FormData()
+      
+      // Tambahkan semua field ke FormData
+      Object.keys(userData).forEach(key => {
+        if (key === 'profile_photo') {
+          // Tambahkan foto profil dengan format yang benar
+          formData.append('profile_photo', {
+            uri: userData.profile_photo.uri,
+            type: userData.profile_photo.type || 'image/jpeg',
+            name: userData.profile_photo.fileName || 'profile.jpg'
+          } as any)
+        } else {
+          formData.append(key, userData[key]?.toString() || '')
+        }
+      })
+      
+      // Ganti header Content-Type untuk multipart/form-data
+      const response = await api.post("/users/update", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      })
+      console.log("Response updateUserProfile (dengan foto):", response.status)
+      
+      // Update stored user data
+      if (response.data.user) {
+        await AsyncStorage.setItem("user", JSON.stringify(response.data.user))
+        console.log("User data disimpan di AsyncStorage")
+      }
+      
+      return response.data
+    } else {
+      // Tanpa foto, gunakan JSON biasa
+      const response = await api.post("/users/update", userData)
+      console.log("Response updateUserProfile:", response.status)
 
-    // Update stored user data
-    if (response.data.user) {
-      await AsyncStorage.setItem("user", JSON.stringify(response.data.user))
-      console.log("User data disimpan di AsyncStorage")
+      // Update stored user data
+      if (response.data.user) {
+        await AsyncStorage.setItem("user", JSON.stringify(response.data.user))
+        console.log("User data disimpan di AsyncStorage")
+      }
+
+      return response.data
     }
-
-    return response.data
   } catch (error: any) {
     console.error("Error updateUserProfile:", error.response?.data || error.message)
     if (error.response) {
       throw new Error(error.response.data.message || "Failed to update user profile")
+    }
+    throw new Error("Network error. Please check your connection.")
+  }
+}
+
+// Update profile photo only
+const updateProfilePhoto = async (photoData: { uri: string, type?: string, fileName?: string } | null, removePhoto = false) => {
+  try {
+    console.log("Mengupdate foto profil")
+    
+    const formData = new FormData()
+    
+    if (photoData) {
+      // Tambahkan foto profil
+      formData.append('profile_photo', {
+        uri: photoData.uri,
+        type: photoData.type || 'image/jpeg',
+        name: photoData.fileName || 'profile.jpg'
+      } as any)
+    } else if (removePhoto) {
+      // Atau hapus foto
+      formData.append('remove_photo', 'true')
+    }
+    
+    const response = await api.post("/users/profile-photo", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    })
+    
+    console.log("Response updateProfilePhoto:", response.status, response.data)
+    
+    // Dapatkan data user terbaru setelah update foto
+    const userData = await getUserProfile()
+    
+    // Update stored user data
+    if (userData) {
+      await AsyncStorage.setItem("user", JSON.stringify(userData))
+      console.log("User data dengan foto baru disimpan di AsyncStorage")
+    }
+    
+    return response.data
+  } catch (error: any) {
+    console.error("Error updateProfilePhoto:", error.response?.data || error.message)
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to update profile photo")
     }
     throw new Error("Network error. Please check your connection.")
   }
@@ -138,6 +221,7 @@ const getChildSatuanKerja = async (parentId: number) => {
 const userService = {
   getUserProfile,
   updateUserProfile,
+  updateProfilePhoto,
   getAllPangkat,
   getAllSatuanKerja,
   getParentSatuanKerja,

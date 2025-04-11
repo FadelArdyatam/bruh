@@ -22,6 +22,7 @@ import TrainingProgramScreen from "../screens/app/TrainingProgramScreen"
 import FoodRecallScreen from "../screens/app/FoodRecallScreen"
 import SettingsScreen from "../screens/app/SettingsScreen"
 import ChangePasswordScreen from "../screens/app/ChangePasswordScreen"
+import ProfilePhotoEditScreen from "../screens/app/ProfilePhotoEditScreen"
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -135,6 +136,7 @@ const MainStackNavigator = () => {
       <MainStack.Screen name="PersonalData" component={PersonalDataScreen} />
       <MainStack.Screen name="FoodRecall" component={FoodRecallScreen} />
       <MainStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <MainStack.Screen name="ProfilePhotoEdit" component={ProfilePhotoEditScreen} />
     </MainStack.Navigator>
   )
 }
