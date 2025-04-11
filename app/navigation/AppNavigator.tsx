@@ -23,6 +23,9 @@ import FoodRecallScreen from "../screens/app/FoodRecallScreen"
 import SettingsScreen from "../screens/app/SettingsScreen"
 import ChangePasswordScreen from "../screens/app/ChangePasswordScreen"
 import ProfilePhotoEditScreen from "../screens/app/ProfilePhotoEditScreen"
+import WorkoutScheduleScreen from "../screens/app/WorkoutScheduleScreen"
+import AddWorkoutScheduleScreen from "../screens/app/AddWorkoutScheduleScreen"
+import EditWorkoutScheduleScreen from "../screens/app/EditWorkoutScheduleScreen"
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -86,13 +89,6 @@ const TabNavigator = () => {
           tabBarIcon: ({ focused }) => <TabIcon icon={User} focused={focused} label="Profil" />,
         }}
       />
-      <Tab.Screen
-        name="SettingsTab"
-        component={SettingsScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon={Settings} focused={focused} label="Pengaturan" />,
-        }}
-      />
     </Tab.Navigator>
   )
 }
@@ -137,6 +133,11 @@ const MainStackNavigator = () => {
       <MainStack.Screen name="FoodRecall" component={FoodRecallScreen} />
       <MainStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <MainStack.Screen name="ProfilePhotoEdit" component={ProfilePhotoEditScreen} />
+
+      {/* Screen baru untuk jadwal latihan */}
+      <MainStack.Screen name="WorkoutSchedule" component={WorkoutScheduleScreen} />
+      <MainStack.Screen name="AddWorkoutSchedule" component={AddWorkoutScheduleScreen} />
+      <MainStack.Screen name="EditWorkoutSchedule" component={EditWorkoutScheduleScreen} />
     </MainStack.Navigator>
   )
 }

@@ -4,6 +4,7 @@ import profileReducer from "./slices/profileSlice"
 import imtReducer from "./slices/imtSlice"
 import trainingReducer from "./slices/trainingSlice"
 import foodReducer from "./slices/foodSlice"
+import workoutScheduleReducer from "./slices/workoutScheduleSlice"
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     imt: imtReducer,
     training: trainingReducer,
     food: foodReducer,
+    workoutSchedule: workoutScheduleReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

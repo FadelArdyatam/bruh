@@ -554,6 +554,23 @@ const TrainingProgramScreen = () => {
             
             <ChevronRight size={20} color="#9CA3AF" />
           </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.quickLinkItem}
+            onPress={() => navigation.navigate("WorkoutSchedule")}
+          >
+            <View style={[styles.quickLinkIcon, { backgroundColor: "#DBEAFE" }]}>
+              <Calendar size={24} color="#3B82F6" />
+            </View>
+            
+            <View style={styles.quickLinkContent}>
+            <Text style={styles.quickLinkTitle}>Jadwal Workout</Text>
+            <Text style={styles.quickLinkDescription}>Atur jadwal latihan mingguan</Text>
+            </View>
+            
+            <ChevronRight size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
         </View>
       </ScrollView>
     </SafeAreaView>
