@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react"
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   Image,
@@ -26,6 +25,7 @@ import { LinearGradient } from "expo-linear-gradient"
 import { useTheme } from "../../context/ThemeContext"
 import { LineChart } from "react-native-chart-kit"
 import { HomeScreenSkeleton } from "~/app/components/SkeletonLoaders"
+import Text from "~/app/components/Typography/Text"
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -250,7 +250,7 @@ const HomeScreen = () => {
               <View style={styles.headerRow}>
                 <View>
                   <Text style={styles.greetingText}>{greeting},</Text>
-                  <Text style={styles.nameText}>
+                  <Text variant="regular" size={24} color="#F1F1F1F1">
                     {user?.name || personalData?.nama_lengkap || personelData?.nama_lengkap || "Pengguna"}
                   </Text>
                 </View>
@@ -258,7 +258,7 @@ const HomeScreen = () => {
                   onPress={() => handleNavigation("ProfileTab")}
                   style={styles.avatarButton}
                 >
-                  <User size={24} color="#FFF" />
+                  <User size={24} color="#F1F1F1F1" />
                 </TouchableOpacity>
               </View>
 
@@ -273,7 +273,7 @@ const HomeScreen = () => {
                     <Text style={styles.imtValue}>
                       {imtData ? imtData.imt : "-"}
                     </Text>
-                    <Text style={styles.imtStatus}>
+                    <Text variant="medium" style={styles.imtStatus}>
                       IMT ({imtData ? imtData.status : "Belum ada data"})
                     </Text>
                   </View>
@@ -295,8 +295,7 @@ const HomeScreen = () => {
               styles.card,
               { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
             ]}>
-              <Text style={[
-                styles.cardTitle,
+              <Text variant="medium" size={18} style={[
                 { color: darkMode ? theme.text.onDark : theme.text.primary }
               ]}>
                 Statistik
@@ -420,12 +419,11 @@ const HomeScreen = () => {
                 { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
               ]}>
                 <View style={styles.cardHeaderRow}>
-                  <Text style={[
-                    styles.cardTitle,
-                    { color: darkMode ? theme.text.onDark : theme.text.primary }
-                  ]}>
-                    Tren Berat Badan
-                  </Text>
+                <Text variant='medium' size={18} style={[
+                { color: darkMode ? theme.text.onDark : theme.text.primary }
+              ]}>
+                Tren Berat Badan
+              </Text>
                   <TouchableOpacity onPress={() => handleNavigation("IMTTab")}>
                     <Text style={{ color: theme.primary }}>Lihat Semua</Text>
                   </TouchableOpacity>
@@ -476,8 +474,7 @@ const HomeScreen = () => {
               styles.card,
               { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
             ]}>
-              <Text style={[
-                styles.cardTitle,
+              <Text variant='medium' size={18} style={[
                 { color: darkMode ? theme.text.onDark : theme.text.primary }
               ]}>
                 Aktivitas Terbaru
@@ -507,8 +504,7 @@ const HomeScreen = () => {
                     </View>
 
                     <View style={styles.activityInfo}>
-                      <Text style={[
-                        styles.activityTitle,
+                      <Text variant="semiBold" style={[
                         { color: darkMode ? theme.text.onDark : theme.text.primary }
                       ]}>
                         {activity.type === 'weight'
@@ -516,8 +512,7 @@ const HomeScreen = () => {
                           : `Latihan: ${activity.name}`
                         }
                       </Text>
-                      <Text style={[
-                        styles.activityDate,
+                      <Text variant="regular" style={[
                         { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
                       ]}>
                         {formatDate(activity.date)}
@@ -560,8 +555,7 @@ const HomeScreen = () => {
               styles.card,
               { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
             ]}>
-              <Text style={[
-                styles.cardTitle,
+              <Text variant='medium' size={18} style={[
                 { color: darkMode ? theme.text.onDark : theme.text.primary }
               ]}>
                 Menu Cepat
@@ -584,10 +578,7 @@ const HomeScreen = () => {
                   <BarChart2 size={24} color={theme.primary} />
                 </View>
                 <View style={styles.menuTextContainer}>
-                  <Text style={[
-                    styles.menuTitle,
-                    { color: darkMode ? theme.text.onDark : theme.text.primary }
-                  ]}>
+                  <Text variant="bold" >
                     Indeks Massa Tubuh
                   </Text>
                   <Text style={[

@@ -35,10 +35,10 @@ const LoadingScreen = () => (
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    "Inter-Regular": require("../assets/fonts/Inter_18pt-Regular.ttf"),
-    "Inter-Medium": require("../assets/fonts/Inter_18pt-Medium.ttf"),
-    "Inter-SemiBold": require("../assets/fonts/Inter_18pt-SemiBold.ttf"),
-    "Inter-Bold": require("../assets/fonts/Inter_18pt-Bold.ttf"),
+    "Poppins-Regular": require("../assets/fonts/Poppins-Regular.ttf"),
+    "Poppins-Medium": require("../assets/fonts/Poppins-Medium.ttf"),
+    "Poppins-SemiBold": require("../assets/fonts/Poppins-SemiBold.ttf"),
+    "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
   })
 
   useEffect(() => {

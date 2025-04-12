@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native"
+import { View,  ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
@@ -16,6 +16,7 @@ import DateTimePicker from "@react-native-community/datetimepicker"
 import Svg, { Circle, Text as SvgText, Path, G } from 'react-native-svg'
 import { LinearGradient } from "expo-linear-gradient"
 import { IMTScreenSkeleton } from "~/app/components/SkeletonLoaders"
+import Text from "~/app/components/Typography/Text"
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -211,14 +212,14 @@ const IMTScreen = () => {
     <SafeAreaView className="flex-1 bg-gray-50 rounded-lg">
       <View style={{ overflow: 'hidden', borderBottomLeftRadius: 30, borderBottomRightRadius: 30 }}>
       <LinearGradient colors={["#FFB800", "#FF8A00"]} className="p-4 pt-8 pb-12 rounded-full">
-        <Text className="text-xl font-bold text-white">INDEKS MASSA TUBUH (IMT)</Text>
+        <Text variant="bold" className="text-2xl text-white">INDEKS MASSA TUBUH (IMT)</Text>
         
         {/* Status IMT Ringkasan */}
         <View className="bg-white/20 p-4 rounded-2xl mt-4">
           <View className="flex-row justify-between items-center">
             <View>
               <Text className="text-white text-sm opacity-80">Status IMT Anda</Text>
-              <Text className="text-white text-2xl font-bold">{currentIMT ? currentIMT.imt : "--"}</Text>
+              <Text className="text-white text-2xl">{currentIMT ? currentIMT.imt : "--"}</Text>
             </View>
             <View className="bg-white px-4 py-2 rounded-full">
               <Text 
@@ -239,7 +240,7 @@ const IMTScreen = () => {
           {/* IMT Gauge Display */}
         {/* Kartu IMT Gauge */}
         <View className="bg-white rounded-3xl p-6 shadow-sm mb-6">
-          <Text className="text-xl font-bold text-gray-800 mb-4">Kategori IMT</Text>
+          <Text variant="bold" className="text-xl text-gray-800 mb-4">Kategori IMT</Text>
           
           {/* IMT Gauge Display */}
           <View className="items-center mb-2 border border-gray-100 bg-gray-50 py-6 px-4 rounded-2xl">
@@ -254,7 +255,7 @@ const IMTScreen = () => {
               borderWidth: 4,
               borderColor: currentIMT ? currentIMT.color : '#FFB800'
             }}>
-              <Text className="text-4xl font-bold" style={{ color: currentIMT ? currentIMT.color : '#FFB800' }}>
+              <Text className="text-4xl" style={{ color: currentIMT ? currentIMT.color : '#FFB800' }}>
                 {currentIMT ? currentIMT.imt : "--"}
               </Text>
               <Text className="text-base font-medium" style={{ color: currentIMT ? currentIMT.color : '#FFB800' }}>
@@ -266,19 +267,19 @@ const IMTScreen = () => {
             <View className="flex-row justify-between mt-6 bg-white p-2 rounded-xl shadow-sm w-full">
               <View className="border-l-4 border-blue-500 pl-2 flex-1 mr-1">
                 <Text className="text-xs text-gray-500">Kurus</Text>
-                <Text className="text-xs font-bold text-blue-500">&lt; 18.5</Text>
+                <Text className="text-xs text-blue-500">&lt; 18.5</Text>
               </View>
               <View className="border-l-4 border-green-500 pl-2 flex-1 mr-1">
                 <Text className="text-xs text-gray-500">Normal</Text>
-                <Text className="text-xs font-bold text-green-500">18.5 - 24.9</Text>
+                <Text className="text-xs text-green-500">18.5 - 24.9</Text>
               </View>
               <View className="border-l-4 border-amber-500 pl-2 flex-1 mr-1">
                 <Text className="text-xs text-gray-500">Berlebih</Text>
-                <Text className="text-xs font-bold text-amber-500">25.0 - 29.9</Text>
+                <Text className="text-xs text-amber-500">25.0 - 29.9</Text>
               </View>
               <View className="border-l-4 border-red-500 pl-2 flex-1">
                 <Text className="text-xs text-gray-500">Obesitas</Text>
-                <Text className="text-xs font-bold text-red-500">≥ 30.0</Text>
+                <Text className="text-xs text-red-500">≥ 30.0</Text>
               </View>
             </View>
           
@@ -309,7 +310,7 @@ const IMTScreen = () => {
           {/* Weight History Graph */}
           {chartData && (
             <View className="mb-4">
-              <Text className="text-gray-800 font-bold mb-2">Grafik Berat Badan</Text>
+              <Text variant="semiBold" className="text-gray-800mb-2">Grafik Berat Badan</Text>
               
               {/* Container ScrollView horizontal untuk grafik yang bisa di-scroll */}
               <ScrollView 
@@ -391,7 +392,7 @@ const IMTScreen = () => {
 
         {/* Input Berat Badan Card */}
         <View className="bg-white rounded-3xl p-6 shadow-sm mb-6">
-          <Text className="text-xl font-bold text-gray-800 mb-4">Input Berat Badan</Text>
+          <Text className="text-xl text-gray-800 mb-4">Input Berat Badan</Text>
 
           <View className="space-y-4">
             <View>
@@ -445,7 +446,7 @@ const IMTScreen = () => {
             ) : (
               <>
                 <Save size={20} color="white" className="mr-2" />
-                <Text className="text-white font-bold">SIMPAN</Text>
+                <Text className="text-white">SIMPAN</Text>
               </>
             )}
           </TouchableOpacity>
@@ -453,7 +454,7 @@ const IMTScreen = () => {
 
         {/* Menu Cepat */}
         <View className="bg-white rounded-3xl p-6 shadow-sm mb-6">
-          <Text className="text-xl font-bold text-gray-800 mb-4">Menu Cepat</Text>
+          <Text variant="semiBold" className="text-xl text-gray-800 mb-4">Menu Cepat</Text>
           
           <TouchableOpacity
             className="flex-row items-center bg-amber-50 p-4 rounded-2xl mb-4"
@@ -463,7 +464,7 @@ const IMTScreen = () => {
               <Plus size={24} color="white" />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-800 font-bold">Recall Makan</Text>
+              <Text variant="semiBold" className="text-gray-800">Recall Makan</Text>
               <Text className="text-gray-600">Catat asupan makanan hari Rabu dan Minggu</Text>
             </View>
             <ArrowRight size={20} color="#FFB800" />
@@ -477,7 +478,7 @@ const IMTScreen = () => {
               <Activity size={24} color="white" />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-800 font-bold">Status Aktivitas</Text>
+              <Text className="text-gray-800">Status Aktivitas</Text>
               <Text className="text-gray-600">Pantau detak jantung dan aktivitas Anda</Text>
             </View>
             <ArrowRight size={20} color="#3B82F6" />

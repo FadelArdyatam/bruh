@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { 
-  View, 
-  Text, 
+  View,
   ScrollView, 
   TouchableOpacity, 
   ActivityIndicator, 
@@ -34,11 +33,13 @@ import {
   Heart,
   Settings,
   User,
-  Edit
+  Edit,
+  ArrowLeft
 } from "lucide-react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useTheme } from "../../context/ThemeContext"
 import ProfilePhotoPicker from "../../components/profilePhotoPicker"
+import Text from "../../components/Typography/Text"
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -92,6 +93,15 @@ const ProfileScreen = () => {
         }
       ]
     )
+  }
+
+  // Navigate back to login page
+  const handleBackToLogin = () => {
+    dispatch(logoutUser())
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    })
   }
 
   // Helper function untuk mendapatkan data personel
@@ -205,12 +215,22 @@ const ProfileScreen = () => {
       <View style={styles.errorContainer}>
         <Text style={styles.errorTitle}>Gagal memuat profil</Text>
         <Text style={styles.errorMessage}>{error}</Text>
-        <TouchableOpacity 
-          style={styles.retryButton}
-          onPress={fetchUserProfile}
-        >
-          <Text style={styles.retryButtonText}>Coba Lagi</Text>
-        </TouchableOpacity>
+        <View style={styles.errorButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={fetchUserProfile}
+          >
+            <Text style={styles.retryButtonText}>Coba Lagi</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={handleBackToLogin}
+          >
+            <ArrowLeft size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.loginButtonText}>Kembali ke Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     )
   }
@@ -246,7 +266,7 @@ const ProfileScreen = () => {
               />
 
               <View style={styles.userInfo}>
-                <Text style={styles.userName}>
+                <Text variant="bold" size={16}>
                   {personelData?.nama_lengkap || personalData?.name || user?.name || "Pengguna SI POLGAR"}
                 </Text>
                 <View style={styles.badgeContainer}>
@@ -304,10 +324,10 @@ const ProfileScreen = () => {
             { backgroundColor: darkMode ? theme?.background.dark : "#FFFFFF" }
           ]}>
             <View style={styles.cardHeader}>
-              <Text style={[
-                styles.cardTitle,
-                { color: darkMode ? theme?.text.onDark : theme?.text.primary || "#1F1F1F" }
-              ]}>
+              <Text 
+              variant="bold"
+              size={16}
+              >
                 Informasi Pribadi
               </Text>
               <TouchableOpacity 
@@ -315,7 +335,7 @@ const ProfileScreen = () => {
                 onPress={() => navigation.navigate("PersonalData")}
               >
                 <Edit size={16} color={theme?.primary || "#FFB800"} />
-                <Text style={[
+                <Text variant="semiBold" style={[
                   styles.editButtonText,
                   { color: theme?.primary || "#FFB800" }
                 ]}>
@@ -324,7 +344,7 @@ const ProfileScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.infoSection}>
+            <View  style={styles.infoSection}>
               <InfoItem 
                 icon={<Shield size={20} color={theme?.primary || "#FFB800"} />}
                 label="NRP/NIP"
@@ -412,10 +432,8 @@ const ProfileScreen = () => {
             styles.card,
             { backgroundColor: darkMode ? theme?.background.dark : "#FFFFFF" }
           ]}>
-            <Text style={[
-              styles.cardTitle,
-              { color: darkMode ? theme?.text.onDark : theme?.text.primary || "#1F1F1F" }
-            ]}>
+            <Text variant="bold"
+            size={16} >
               Menu Pengaturan
             </Text>
 
@@ -492,10 +510,10 @@ const InfoItem = ({
         {icon}
       </View>
       <View style={styles.infoContent}>
-        <Text style={[styles.infoLabel, { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
+        <Text variant="semiBold" style={[styles.infoLabel, { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }]}>
           {label}
         </Text>
-        <Text style={[styles.infoValue, { color: textColor || '#1F1F1F' }]}>
+        <Text  variant="semiBold" style={[styles.infoValue, { color: textColor || '#1F1F1F' }]}>
           {value}
         </Text>
       </View>
@@ -579,13 +597,37 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
+  errorButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    gap: 12,
+  },
   retryButton: {
     backgroundColor: '#FFB800',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
+    flex: 1,
+    maxWidth: 120,
+    alignItems: 'center',
   },
   retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  loginButton: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    maxWidth: 180,
+  },
+  loginButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
@@ -642,12 +684,6 @@ const styles = StyleSheet.create({
   userInfo: {
     marginLeft: 16,
     flex: 1,
-  },
-  userName: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
   },
   badgeContainer: {
     backgroundColor: 'rgba(255,255,255,0.2)',
