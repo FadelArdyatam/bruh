@@ -1,11 +1,10 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { createStackNavigator } from "@react-navigation/stack"
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
-import { useSelector, useDispatch } from "react-redux"
-import type { RootState, AppDispatch } from "../redux/store"
+import { useSelector } from "react-redux"
+import type { RootState } from "../redux/store"
 import { NavigationContainer } from "@react-navigation/native"
-import { View, Text, Platform } from "react-native"
-import { Home, User, Activity, BarChart3, Settings } from "lucide-react-native"
+import { View } from "react-native"
 
 // Auth Screens
 import LoginScreen from "../screens/auth/LoginScreen"
@@ -27,66 +26,49 @@ import WorkoutScheduleScreen from "../screens/app/WorkoutScheduleScreen"
 import AddWorkoutScheduleScreen from "../screens/app/AddWorkoutScheduleScreen"
 import EditWorkoutScheduleScreen from "../screens/app/EditWorkoutScheduleScreen"
 
+// Custom Navigation
+import CustomBottomNavigation from "../components/BottomNavigator"
+
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
 const AuthStack = createStackNavigator()
 const MainStack = createStackNavigator()
 
-const TabIcon = ({ icon: Icon, focused, label }: { icon: any; focused: boolean; label: string }) => (
-  <View className="items-center justify-center">
-    <Icon size={22} color={focused ? "#FFB800" : "#9CA3AF"} />
-    <Text className={`text-xs  ${focused ? "text-yellow-500 font-bold" : "text-gray-500"}`}>{label}</Text>
-  </View>
-)
-
-// Tab navigator yang berisi menu utama aplikasi
+// Tab navigator dengan custom styling
 const TabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          height: Platform.OS === "ios" ? 90 : 70,
-          paddingBottom: Platform.OS === "ios" ? 25 : 10,
-          paddingTop: 10,
-          backgroundColor: "white",
-          borderTopWidth: 1,
-          borderTopColor: "#F3F4F6",
-          elevation: 8,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-        },
-        tabBarShowLabel: false,
       }}
+      tabBar={(props) => <CustomBottomNavigation {...props} />}
     >
-      <Tab.Screen
-        name="HomeTab"
+      <Tab.Screen 
+        name="HomeTab" 
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon={Home} focused={focused} label="Beranda" />,
+          tabBarLabel: '',
         }}
       />
-      <Tab.Screen
-        name="IMTTab"
+      <Tab.Screen 
+        name="IMTTab" 
         component={IMTScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon={BarChart3} focused={focused} label="IMT" />,
+          tabBarLabel: '',
         }}
       />
-      <Tab.Screen
-        name="TrainingProgramTab"
+      <Tab.Screen 
+        name="TrainingProgramTab" 
         component={TrainingProgramScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon={Activity} focused={focused} label="Latihan" />,
+          tabBarLabel: 'Analytics',
         }}
       />
-      <Tab.Screen
-        name="ProfileTab"
+      <Tab.Screen 
+        name="ProfileTab" 
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon={User} focused={focused} label="Profil" />,
+          tabBarLabel: '',
         }}
       />
     </Tab.Navigator>
@@ -133,8 +115,9 @@ const MainStackNavigator = () => {
       <MainStack.Screen name="FoodRecall" component={FoodRecallScreen} />
       <MainStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <MainStack.Screen name="ProfilePhotoEdit" component={ProfilePhotoEditScreen} />
-
-      {/* Screen baru untuk jadwal latihan */}
+      <MainStack.Screen name="Settings" component={SettingsScreen} />
+      
+      {/* Screen untuk jadwal latihan */}
       <MainStack.Screen name="WorkoutSchedule" component={WorkoutScheduleScreen} />
       <MainStack.Screen name="AddWorkoutSchedule" component={AddWorkoutScheduleScreen} />
       <MainStack.Screen name="EditWorkoutSchedule" component={EditWorkoutScheduleScreen} />
@@ -174,7 +157,7 @@ const RootNavigator = () => {
 // Komponen AppNavigator yang membungkus semua navigasi dalam NavigationContainer
 const AppNavigator = () => {
   return (
-      <RootNavigator />
+    <RootNavigator />
   )
 }
 

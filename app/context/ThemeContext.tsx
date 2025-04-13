@@ -8,6 +8,7 @@ export const THEMES = {
     primary: '#FFB800',
     secondary: '#FF8A00',
     accent: '#FFC107',
+    coklat: '#964b00',
     background: {
       light: '#FFF9E6',
       card: '#FFFFFF',
@@ -24,6 +25,7 @@ export const THEMES = {
     primary: '#3B82F6',
     secondary: '#1D4ED8',
     accent: '#60A5FA',
+    coklat: '',
     background: {
       light: '#EFF6FF',
       card: '#FFFFFF',
@@ -40,6 +42,7 @@ export const THEMES = {
     primary: '#10B981',
     secondary: '#047857',
     accent: '#34D399',
+    coklat: '',
     background: {
       light: '#ECFDF5',
       card: '#FFFFFF',
@@ -56,6 +59,7 @@ export const THEMES = {
     primary: '#8B5CF6',
     secondary: '#6D28D9',
     accent: '#A78BFA',
+    coklat: '',
     background: {
       light: '#F5F3FF',
       card: '#FFFFFF',
@@ -72,6 +76,7 @@ export const THEMES = {
     primary: '#EC4899',
     secondary: '#BE185D',
     accent: '#F472B6',
+    coklat: '',
     background: {
       light: '#FDF2F8',
       card: '#FFFFFF',

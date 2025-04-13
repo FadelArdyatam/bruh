@@ -250,7 +250,7 @@ const HomeScreen = () => {
               <View style={styles.headerRow}>
                 <View>
                   <Text style={styles.greetingText}>{greeting},</Text>
-                  <Text variant="regular" size={24} color="#F1F1F1F1">
+                  <Text variant="semiBold" size={24} color="#F1F1F1F1">
                     {user?.name || personalData?.nama_lengkap || personelData?.nama_lengkap || "Pengguna"}
                   </Text>
                 </View>
@@ -278,7 +278,7 @@ const HomeScreen = () => {
                     </Text>
                   </View>
                   <TouchableOpacity
-                    style={[styles.updateButton, { backgroundColor: theme.accent }]}
+                    style={[styles.updateButton, { backgroundColor: theme.primary }]}
                     onPress={() => handleNavigation("IMTTab")}
                   >
                     <Text style={styles.updateButtonText}>Update</Text>
@@ -738,10 +738,10 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     marginTop: -50,
-    paddingHorizontal: 20
+    padding:20
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 30,
     padding: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
