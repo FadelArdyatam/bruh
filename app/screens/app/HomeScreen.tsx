@@ -21,7 +21,6 @@ import { getAllWorkouts } from "../../redux/slices/workoutSlice"
 import { BarChart2, TrendingUp, Activity, Award, User, History, ChevronRight } from "lucide-react-native"
 import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
-import { LinearGradient } from "expo-linear-gradient"
 import { useTheme } from "../../context/ThemeContext"
 import { LineChart } from "react-native-chart-kit"
 import { HomeScreenSkeleton } from "~/app/components/SkeletonLoaders"
@@ -107,14 +106,14 @@ const HomeScreen = () => {
   const imtData = calculateIMT()
   const personelData = getPersonelData()
   const latestWeight = getLatestWeight();
-    // Determine if the screen is still loading data
+  
+  // Determine if the screen is still loading data
   const isLoading = profileLoading || weightLoading || trainingLoading;
   
-    // If any data is still loading and we don't have cached data, show skeleton
+  // If any data is still loading and we don't have cached data, show skeleton
   if (isLoading || (!personalData || weightHistory.length === 0)) {
-      return <HomeScreenSkeleton />;
+    return <HomeScreenSkeleton />;
   }  
-  
 
   // Prepare weight history data for chart
   const prepareChartData = () => {
@@ -239,54 +238,47 @@ const HomeScreen = () => {
         { backgroundColor: darkMode ? theme.background.dark : theme.background.light }
       ]}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header with gradient */}
-          <LinearGradient
-            colors={[theme.primary, theme.secondary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.header}
-          >
-            <View style={styles.headerContent}>
-              <View style={styles.headerRow}>
+          {/* Header section */}
+          <View style={styles.headerContent}>
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={[styles.greetingText, { color: theme.accent }]}>{greeting},</Text>
+                <Text variant="semiBold" size={24} color="#000000">
+                  {user?.name || personalData?.nama_lengkap || personelData?.nama_lengkap || "Pengguna"}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => handleNavigation("ProfileTab")}
+                style={[styles.avatarButton, {backgroundColor: theme.primary}]}
+              >
+                <User size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Status Kebugaran Card */}
+            <View style={[
+              styles.imtStatusCard,
+              { backgroundColor: theme.primary }
+            ]}>
+              <Text style={[styles.imtStatusTitle, { color: theme.coklat || "#6c3c0c" }]}>Status Kebugaran</Text>
+              <View style={styles.imtStatusRow}>
                 <View>
-                  <Text style={styles.greetingText}>{greeting},</Text>
-                  <Text variant="semiBold" size={24} color="#F1F1F1F1">
-                    {user?.name || personalData?.nama_lengkap || personelData?.nama_lengkap || "Pengguna"}
+                  <Text style={styles.imtValue}>
+                    {imtData ? imtData.imt : "-"}
+                  </Text>
+                  <Text variant="medium" style={styles.imtStatus}>
+                    IMT ({imtData ? imtData.status : "Belum ada data"})
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => handleNavigation("ProfileTab")}
-                  style={styles.avatarButton}
+                  style={[styles.updateButton, { backgroundColor: theme.coklat || "#6c3c0c" }]}
+                  onPress={() => handleNavigation("IMTTab")}
                 >
-                  <User size={24} color="#F1F1F1F1" />
+                  <Text style={styles.updateButtonText}>Update</Text>
                 </TouchableOpacity>
               </View>
-
-              {/* IMT Status Card */}
-              <View style={[
-                styles.imtStatusCard,
-                { backgroundColor: darkMode ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.2)' }
-              ]}>
-                <Text style={styles.imtStatusTitle}>Status Kebugaran</Text>
-                <View style={styles.imtStatusRow}>
-                  <View>
-                    <Text style={styles.imtValue}>
-                      {imtData ? imtData.imt : "-"}
-                    </Text>
-                    <Text variant="medium" style={styles.imtStatus}>
-                      IMT ({imtData ? imtData.status : "Belum ada data"})
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={[styles.updateButton, { backgroundColor: theme.primary }]}
-                    onPress={() => handleNavigation("IMTTab")}
-                  >
-                    <Text style={styles.updateButtonText}>Update</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
             </View>
-          </LinearGradient>
+          </View>
 
           {/* Main content */}
           <View style={styles.mainContent}>
@@ -625,7 +617,13 @@ const HomeScreen = () => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.menuItem}
+                style={[
+                  styles.menuItem,
+                  {
+                    borderBottomWidth: 1,
+                    borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                  }
+                ]}
                 onPress={() => handleNavigation("FoodRecall")}
               >
                 <View style={[
@@ -653,6 +651,36 @@ const HomeScreen = () => {
                 </View>
                 <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleNavigation("DietPlan")}
+              >
+                <View style={[
+                  styles.menuIconContainer,
+                  { backgroundColor: `${theme.primary}20` }
+                ]}>
+                  <Image
+                    source={{ uri: "https://cdn-icons-png.flaticon.com/512/706/706164.png" }}
+                    style={styles.menuIcon}
+                  />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={[
+                    styles.menuTitle,
+                    { color: darkMode ? theme.text.onDark : theme.text.primary }
+                  ]}>
+                    Diet Plan
+                  </Text>
+                  <Text style={[
+                    styles.menuDescription,
+                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+                  ]}>
+                    Rencana diet personal & panduan nutrisi
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
@@ -670,14 +698,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  header: {
-    paddingTop: 40,
-    paddingBottom: 70,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30
-  },
   headerContent: {
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10
   },
   headerRow: {
     flexDirection: 'row',
@@ -686,19 +710,12 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   greetingText: {
-    color: '#FFFFFF',
     fontSize: 16
-  },
-  nameText: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold'
   },
   avatarButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -707,10 +724,14 @@ const styles = StyleSheet.create({
   imtStatusCard: {
     padding: 20,
     borderRadius: 16,
-    marginBottom: 20
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   imtStatusTitle: {
-    color: '#FFFFFF',
     fontSize: 16,
     marginBottom: 8
   },
@@ -737,11 +758,10 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   mainContent: {
-    marginTop: -50,
-    padding:20
+    padding: 20
   },
   card: {
-    borderRadius: 30,
+    borderRadius: 16,
     padding: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -763,7 +783,8 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    marginTop: 12
   },
   statHalfColumn: {
     width: '50%',
@@ -863,4 +884,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default HomeScreen
+export default HomeScreen;

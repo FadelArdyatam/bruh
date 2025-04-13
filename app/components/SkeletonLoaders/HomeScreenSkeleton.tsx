@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkeletonCircle, SkeletonText, SkeletonBox } from '../SkeletonLoader';
 
@@ -9,30 +8,29 @@ const screenWidth = Dimensions.get('window').width;
 const HomeScreenSkeleton = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={["#FFB800", "#FF8A00"]} style={styles.header}>
-        <View style={styles.headerContent}>
-          {/* Header Row (Greeting & Avatar) */}
-          <View style={styles.headerRow}>
-            <View>
-              <SkeletonText width={120} height={16} style={{ marginBottom: 8 }} />
-              <SkeletonText width={180} height={24} />
-            </View>
-            <SkeletonCircle width={48} height={48} />
+      {/* Header Content (non-gradient) */}
+      <View style={styles.headerContent}>
+        {/* Header Row (Greeting & Avatar) */}
+        <View style={styles.headerRow}>
+          <View>
+            <SkeletonText width={120} height={16} style={{ marginBottom: 8 }} />
+            <SkeletonText width={180} height={24} />
           </View>
+          <SkeletonCircle width={48} height={48} />
+        </View>
 
-          {/* IMT Status Card */}
-          <View style={styles.imtStatusCard}>
-            <SkeletonText width={120} height={16} style={{ marginBottom: 12 }} />
-            <View style={styles.imtStatusRow}>
-              <View>
-                <SkeletonText width={60} height={32} style={{ marginBottom: 4 }} />
-                <SkeletonText width={120} height={16} />
-              </View>
-              <SkeletonBox width={80} height={36} borderRadius={8} />
+        {/* IMT Status Card */}
+        <View style={styles.imtStatusCard}>
+          <SkeletonText width={120} height={16} style={{ marginBottom: 12 }} />
+          <View style={styles.imtStatusRow}>
+            <View>
+              <SkeletonText width={60} height={32} style={{ marginBottom: 4 }} />
+              <SkeletonText width={120} height={16} />
             </View>
+            <SkeletonBox width={80} height={36} borderRadius={8} />
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <View style={styles.mainContent}>
         {/* Stats Card */}
@@ -43,7 +41,7 @@ const HomeScreenSkeleton = () => {
             {/* IMT Stat */}
             <View style={styles.statHalfColumn}>
               <View style={styles.statCard}>
-                <SkeletonCircle width={40} height={40} style={{ marginBottom: 8 }} />
+                <SkeletonCircle width={36} height={36} style={{ marginBottom: 8 }} />
                 <SkeletonText width={30} style={{ marginBottom: 4 }} />
                 <SkeletonText width={40} height={20} />
               </View>
@@ -52,7 +50,7 @@ const HomeScreenSkeleton = () => {
             {/* Weight Stat */}
             <View style={styles.statHalfColumn}>
               <View style={styles.statCard}>
-                <SkeletonCircle width={40} height={40} style={{ marginBottom: 8 }} />
+                <SkeletonCircle width={36} height={36} style={{ marginBottom: 8 }} />
                 <SkeletonText width={40} style={{ marginBottom: 4 }} />
                 <SkeletonText width={50} height={20} />
               </View>
@@ -61,7 +59,7 @@ const HomeScreenSkeleton = () => {
             {/* Training Stat */}
             <View style={styles.statHalfColumn}>
               <View style={styles.statCard}>
-                <SkeletonCircle width={40} height={40} style={{ marginBottom: 8 }} />
+                <SkeletonCircle width={36} height={36} style={{ marginBottom: 8 }} />
                 <SkeletonText width={60} style={{ marginBottom: 4 }} />
                 <SkeletonText width={30} height={20} />
               </View>
@@ -70,7 +68,7 @@ const HomeScreenSkeleton = () => {
             {/* Height Stat */}
             <View style={styles.statHalfColumn}>
               <View style={styles.statCard}>
-                <SkeletonCircle width={40} height={40} style={{ marginBottom: 8 }} />
+                <SkeletonCircle width={36} height={36} style={{ marginBottom: 8 }} />
                 <SkeletonText width={40} style={{ marginBottom: 4 }} />
                 <SkeletonText width={60} height={20} />
               </View>
@@ -106,10 +104,11 @@ const HomeScreenSkeleton = () => {
                 styles.activityItem,
                 { 
                   borderBottomWidth: index < 2 ? 1 : 0,
+                  borderBottomColor: 'rgba(0,0,0,0.1)'
                 }
               ]}
             >
-              <SkeletonCircle width={50} height={50} />
+              <SkeletonCircle width={48} height={48} />
               
               <View style={styles.activityInfo}>
                 <SkeletonText width={150} height={18} style={{ marginBottom: 4 }} />
@@ -128,18 +127,19 @@ const HomeScreenSkeleton = () => {
         <View style={styles.card}>
           <SkeletonText width={120} height={18} style={{ marginBottom: 15 }} />
           
-          {/* Menu items */}
-          {[...Array(3)].map((_, index) => (
+          {/* Menu items - Sekarang ada 4 item menu */}
+          {[...Array(4)].map((_, index) => (
             <View 
               key={index} 
               style={[
                 styles.menuItem,
                 { 
-                  borderBottomWidth: index < 2 ? 1 : 0,
+                  borderBottomWidth: index < 3 ? 1 : 0,
+                  borderBottomColor: 'rgba(0,0,0,0.05)'
                 }
               ]}
             >
-              <SkeletonCircle width={50} height={50} />
+              <SkeletonCircle width={48} height={48} />
               <View style={styles.menuTextContainer}>
                 <SkeletonText width={160} height={18} style={{ marginBottom: 4 }} />
                 <SkeletonText width={200} height={14} />
@@ -158,14 +158,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  header: {
-    paddingTop: 40,
-    paddingBottom: 70,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
   headerContent: {
     paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   headerRow: {
     flexDirection: 'row',
@@ -176,8 +172,13 @@ const styles = StyleSheet.create({
   imtStatusCard: {
     padding: 20,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#FFB800',
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   imtStatusRow: {
     flexDirection: 'row',
@@ -185,8 +186,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mainContent: {
-    marginTop: -50,
-    paddingHorizontal: 20,
+    padding: 20,
   },
   card: {
     borderRadius: 16,
@@ -208,6 +208,7 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginTop: 12,
   },
   statHalfColumn: {
     width: '50%',
@@ -227,7 +228,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
   },
   activityInfo: {
     flex: 1,
@@ -240,7 +240,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   menuTextContainer: {
     flex: 1,

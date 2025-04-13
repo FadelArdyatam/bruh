@@ -17,17 +17,18 @@ import HomeScreen from "../screens/app/HomeScreen"
 import ProfileScreen from "../screens/app/ProfileScreen"
 import PersonalDataScreen from "../screens/app/PersonalDataScreen"
 import IMTScreen from "../screens/app/IMTScreen"
-import TrainingProgramScreen from "../screens/app/TrainingProgramScreen"
-import FoodRecallScreen from "../screens/app/FoodRecallScreen"
+import TrainingProgramScreen from "../screens/app/Workout/TrainingProgramScreen"
+import FoodRecallScreen from "../screens/app/Food/FoodRecallScreen"
 import SettingsScreen from "../screens/app/SettingsScreen"
 import ChangePasswordScreen from "../screens/app/ChangePasswordScreen"
 import ProfilePhotoEditScreen from "../screens/app/ProfilePhotoEditScreen"
-import WorkoutScheduleScreen from "../screens/app/WorkoutScheduleScreen"
-import AddWorkoutScheduleScreen from "../screens/app/AddWorkoutScheduleScreen"
-import EditWorkoutScheduleScreen from "../screens/app/EditWorkoutScheduleScreen"
 
 // Custom Navigation
 import CustomBottomNavigation from "../components/BottomNavigator"
+import DietScreen from "../screens/app/Diet/dietScreen"
+import WorkoutScreen from "../screens/app/Workout/WorkoutScreen"
+import WorkoutAnalysisScreen from "../screens/app/Workout/WorkoutAnalysisScreen"
+import WorkoutHistoryScreen from "../screens/app/Workout/WorkoutHistoryScreen"
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -67,6 +68,13 @@ const TabNavigator = () => {
       <Tab.Screen 
         name="ProfileTab" 
         component={ProfileScreen}
+        options={{
+          tabBarLabel: '',
+        }}
+      />
+      <Tab.Screen
+        name="WorkoutTab"
+        component={WorkoutScreen}
         options={{
           tabBarLabel: '',
         }}
@@ -118,9 +126,8 @@ const MainStackNavigator = () => {
       <MainStack.Screen name="Settings" component={SettingsScreen} />
       
       {/* Screen untuk jadwal latihan */}
-      <MainStack.Screen name="WorkoutSchedule" component={WorkoutScheduleScreen} />
-      <MainStack.Screen name="AddWorkoutSchedule" component={AddWorkoutScheduleScreen} />
-      <MainStack.Screen name="EditWorkoutSchedule" component={EditWorkoutScheduleScreen} />
+
+      <MainStack.Screen name="DietPlan" component={DietScreen} />
     </MainStack.Navigator>
   )
 }
