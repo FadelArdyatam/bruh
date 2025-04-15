@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../redux/store"
 import { getUserProfile } from "../../redux/slices/profileSlice"
 import { getWeightData } from "../../redux/slices/imtSlice"
-import { getAllWorkouts } from "../../redux/slices/workoutSlice"
+import { getAllWorkouts, getWorkoutHistory } from "../../redux/slices/workoutSlice"
 import { BarChart2, TrendingUp, Activity, Award, User, History, ChevronRight } from "lucide-react-native"
 import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
@@ -40,10 +40,14 @@ const HomeScreen = () => {
 
   const [greeting, setGreeting] = useState("")
 
+// Jika trainingHistory adalah array
+const count = Array.isArray(trainingHistory) ? trainingHistory.length : 0;
+
   useEffect(() => {
     dispatch(getUserProfile())
     dispatch(getWeightData())
     dispatch(getAllWorkouts())
+    dispatch(getWorkoutHistory())
 
     // Set greeting based on time of day
     const hour = new Date().getHours()
@@ -51,6 +55,11 @@ const HomeScreen = () => {
     else if (hour < 18) setGreeting("Selamat Siang")
     else setGreeting("Selamat Malam")
   }, [])
+
+  useEffect(() => {
+    console.log("Training history updated:", trainingHistory)
+  }, [trainingHistory])
+  
 
   useFocusEffect(
     React.useCallback(() => {

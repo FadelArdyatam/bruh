@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "../../../redux/store"
-import { getAllWorkouts, getWorkoutDetail, saveTrainingSession } from "../../../redux/slices/workoutSlice"
+import { getAllWorkouts, getWorkoutDetail, logWorkout } from "../../../redux/slices/workoutSlice"
 import { 
   Save, 
   Clock, 
@@ -86,7 +86,7 @@ const TrainingProgramScreen = () => {
       const caloriesBurned = durationInSeconds * Number.parseFloat(selectedWorkout.kalori_ratarata_perdetik)
 
       await dispatch(
-        saveTrainingSession({
+        logWorkout({
           workout_id: selectedWorkout.id,
           workout_name: selectedWorkout.nama_latihan,
           duration: Number.parseInt(duration),
@@ -94,6 +94,7 @@ const TrainingProgramScreen = () => {
           distance: distance ? Number.parseFloat(distance) : 0,
           calories_burned: caloriesBurned,
         }),
+        
       ).unwrap()
 
       Alert.alert("Sukses", `Latihan ${selectedWorkout.nama_latihan} berhasil disimpan`)

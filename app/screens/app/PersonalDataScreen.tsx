@@ -24,19 +24,21 @@ import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { completeProfileSetup } from "../../redux/slices/authSlice"
+import weightService from "../../services/weightService"
 
 type PersonalData = {
-  name: string
-  email: string
-  no_hp: string
-  tempat_lahir: string
-  tanggal_lahir: string
-  jenis_kelamin: string
-  jenis_pekerjaan: string
-  intensitas: number
-  tinggi_badan: number
-  id_satuankerja: number | null
-  id_pangkat: number | null
+  name: string;
+  email: string;
+  no_hp: string;
+  tempat_lahir: string;
+  tanggal_lahir: string;
+  jenis_kelamin: string;
+  jenis_pekerjaan: string;
+  intensitas: number;
+  tinggi_badan: number;
+  berat_badan: number; // Tambahkan ini
+  id_satuankerja: number | null;
+  id_pangkat: number | null;
 }
 
 const PersonalDataScreen = () => {
@@ -55,6 +57,7 @@ const PersonalDataScreen = () => {
     jenis_pekerjaan: "",
     intensitas: 0,
     tinggi_badan: 0,
+    berat_badan: 0, // Tambahkan ini
     id_satuankerja: null,
     id_pangkat: null,
   })
@@ -72,7 +75,19 @@ const PersonalDataScreen = () => {
     dispatch(getUserProfile())
     dispatch(getAllPangkat())
     dispatch(getAllSatuanKerja())
-    
+
+    // Mengambil data berat badan
+    weightService.getWeightData().then(data => {
+      if (data && data.length > 0) {
+        // Ambil data berat badan terbaru
+        const latestWeight = data[data.length - 1];
+        setFormData(prev => ({
+          ...prev,
+          berat_badan: latestWeight.berat_badan,
+        }));
+      }
+    });
+
     Animated.timing(fadeAnimation, {
       toValue: 1,
       duration: 800,
@@ -92,6 +107,7 @@ const PersonalDataScreen = () => {
         jenis_pekerjaan: personalData.jenis_pekerjaan || "",
         intensitas: personalData.intensitas || 0,
         tinggi_badan: personalData.tinggi_badan || 0,
+        berat_badan: personalData.berat_badan || 0, // Tambahkan ini
         id_satuankerja: personalData.id_satuankerja || null,
         id_pangkat: personalData.id_pangkat || null,
       })
@@ -125,6 +141,7 @@ const PersonalDataScreen = () => {
       "jenis_kelamin",
       "jenis_pekerjaan",
       "tinggi_badan",
+      "berat_badan", // Tambahkan ini
       "id_satuankerja",
       "id_pangkat",
     ]
@@ -149,6 +166,12 @@ const PersonalDataScreen = () => {
       return false
     }
 
+    // Berat badan validation
+    if (formData.berat_badan <= 0) {
+      Alert.alert("Error", "Berat badan harus lebih dari 0 kg")
+      return false
+    }
+
     return true
   }
 
@@ -168,13 +191,22 @@ const PersonalDataScreen = () => {
     if (!validateForm()) return;
   
     try {
+      // Simpan data profil
       await dispatch(updateUserProfile(formData)).unwrap();
-      
+
+      // Simpan data berat badan
+      const weightData = {
+        berat_badan: formData.berat_badan,
+        minggu_ke: 1, // Anda bisa mengatur minggu sesuai kebutuhan
+        tgl_berat_badan: new Date().toISOString().split("T")[0], // Tanggal hari ini
+      };
+      await weightService.saveWeightData(weightData);
+
       if (needsProfileSetup) {
         await dispatch(completeProfileSetup());
-        Alert.alert("Sukses", "Data profil berhasil disimpan");
+        Alert.alert("Sukses", "Data profil dan berat badan berhasil disimpan");
       } else {
-        Alert.alert("Sukses", "Data personil berhasil disimpan", [
+        Alert.alert("Sukses", "Data personil dan berat badan berhasil disimpan", [
           { text: "OK", onPress: () => navigation.goBack() }
         ]);
       }
@@ -410,6 +442,15 @@ const PersonalDataScreen = () => {
         "Masukkan tinggi badan", 
         <Ruler size={20} color="#666" className="mr-3" />, 
         (text) => handleChange("tinggi_badan", Number.parseInt(text) || 0),
+        "numeric"
+      )}
+
+      {renderFieldWithIcon(
+        "Berat Badan (kg)", 
+        formData.berat_badan || "", 
+        "Masukkan berat badan", 
+        <Ruler size={20} color="#666" className="mr-3" />, 
+        (text) => handleChange("berat_badan", Number.parseInt(text) || 0),
         "numeric"
       )}
 

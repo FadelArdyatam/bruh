@@ -31,8 +31,9 @@ import WorkoutListScreen from "../screens/app/Workout/WorkoutListScreen"
 import WorkoutDetailScreen from "../screens/app/Workout/WorkoutDetailScreen"
 import LogWorkoutScreen from "../screens/app/Workout/LogWorkoutScreen"
 import WorkoutHistoryScreen from "../screens/app/Workout/WorkoutHistoryScreen"
-import WorkoutAnalysisScreen from "../screens/app/WorkoutAnalysisScreen"
+import WorkoutAnalysisScreen from "../screens/app/Workout/WorkoutAnalysisScreen"
 import WorkoutScheduleScreen from "../screens/app/Workout/WorkoutScheduleScreen"
+import AddWorkoutScheduleScreen from "../screens/app/Workout/AddWorkoutScheduleScreen"
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -138,6 +139,7 @@ const MainStackNavigator = () => {
       <MainStack.Screen name="WorkoutHistory" component={WorkoutHistoryScreen}/>
       <MainStack.Screen name="WorkoutAnalysis" component={WorkoutAnalysisScreen}/>
       <MainStack.Screen name="WorkoutSchedule" component={WorkoutScheduleScreen}/>
+      <MainStack.Screen name="AddWorkoutSchedule" component={AddWorkoutScheduleScreen}/>
 
     </MainStack.Navigator>
   )

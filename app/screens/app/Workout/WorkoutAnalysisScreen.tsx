@@ -28,6 +28,8 @@ const WorkoutAnalysisScreen = () => {
   const navigation = useNavigation()
   const { workoutAnalysis, workoutStats, isLoading } = useSelector((state: RootState) => state.training);
   
+  
+
   const [activeTab, setActiveTab] = useState("weekly")
   
   useEffect(() => {

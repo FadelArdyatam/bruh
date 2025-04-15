@@ -46,33 +46,36 @@ const LogWorkoutScreen = () => {
   
   const handleSave = async () => {
     if (!heartRate || !duration) {
-      Alert.alert("Error", "Denyut jantung dan durasi latihan harus diisi")
-      return
+      Alert.alert("Error", "Denyut jantung dan durasi latihan harus diisi");
+      return;
     }
-    
+  
     try {
       const workoutData = {
-        id_master_latihan: selectedWorkoutId,
-        denyut_jantung: parseInt(heartRate),
-        waktu_latihan: parseInt(duration),
-        tgl_latihan: date.toISOString().split('T')[0],
-        jarak_tempuh: distance ? parseFloat(distance) : 0,
-      }
-      
-      if (distance) {
-        workoutData.jarak_tempuh = parseFloat(distance)
-      }
-      
-      await dispatch(logWorkout(workoutData)).unwrap()
-      
+       id_master_latihan: selectedWorkoutId,
+       denyut_jantung: parseInt(heartRate, 10),
+       waktu_latihan: parseInt(duration, 10),
+       tgl_latihan: formatDateForAPI(date), // Format date for API
+       jarak_tempuh: distance ? parseFloat(distance) : 0,
+     };
+  
+      await dispatch(logWorkout(workoutData)).unwrap();
+  
       Alert.alert("Sukses", "Data latihan berhasil disimpan", [
         { text: "OK", onPress: () => navigation.goBack() }
-      ])
+      ]);
     } catch (error) {
-      Alert.alert("Error", "Gagal menyimpan data latihan")
-      console.error(error)
+      Alert.alert("Error", "Gagal menyimpan data latihan");
+      console.error(error);
     }
-  }
+  };
+  
+  // Helper function to format date for API
+  const formatDateForAPI = (date: Date) => {
+    const dateString = date.toISOString();
+    return dateString.split('T')[0]; // Return date part in ISO format
+  };
+  
   
   if (isLoading && !selectedWorkout) {
     return (
