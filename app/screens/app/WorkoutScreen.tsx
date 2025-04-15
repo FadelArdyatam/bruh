@@ -38,6 +38,7 @@ import { useNavigation } from "@react-navigation/native"
 import { StackNavigationProp } from "@react-navigation/stack"
 import { LinearGradient } from "expo-linear-gradient"
 import { getWorkoutIcon, getActivityIcon, getWorkoutIconBackground, isHighIntensityWorkout } from "../../../assets/Icon/WorkoutIcon"
+import RecentActivities from "./AktivitasTerbaru"
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -307,38 +308,7 @@ const WorkoutScreen = () => {
           />
         </View>
 
-        {/* Recent Activities */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Aktivitas Terbaru</Text>
-            <TouchableOpacity onPress={navigateToWorkoutHistory}>
-              <Text style={styles.seeAllText}>Lihat Semua</Text>
-            </TouchableOpacity>
-          </View>
-
-          {trainingHistory.length > 0 ? (
-            trainingHistory.slice(0, 3).map((activity, index) => (
-              <View key={index} style={styles.activityItem}>
-                <View style={styles.activityIconContainer}>
-                  <Activity size={24} color="#FFB800" />
-                </View>
-                <View style={styles.activityInfo}>
-                  <Text style={styles.activityTitle}>{activity.workout_name}</Text>
-                  <Text style={styles.activityDate}>{formatDate(activity.date)}</Text>
-                </View>
-                <View style={styles.activityStats}>
-                  <Text style={styles.caloriesText}>{Math.round(activity.calories_burned)} kal</Text>
-                  <Text style={styles.durationText}>{activity.duration} min</Text>
-                </View>
-              </View>
-            ))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <History size={40} color="#E5E7EB" />
-              <Text style={styles.emptyText}>Belum ada riwayat latihan</Text>
-            </View>
-          )}
-        </View>
+        <RecentActivities trainingHistory={trainingHistory} />
 
         {/* Menu Links */}
         <View style={styles.menuContainer}>
@@ -653,6 +623,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 1,
     },
+    marginBottom: 30,
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
@@ -660,9 +631,10 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#F3F4F6",
+    marginBottom: 16,
   },
   menuIcon: {
     width: 48,

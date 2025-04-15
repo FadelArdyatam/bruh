@@ -16,12 +16,16 @@ import { useNavigation } from "@react-navigation/native";
 import { ArrowLeft, Activity, Calendar, FireExtinguisher, Clock, ChevronRight } from "lucide-react-native";
 import { RootState } from "~/app/redux/store";
 import { Action, ThunkDispatch } from "@reduxjs/toolkit";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 const WorkoutHistoryScreen = () => {
   const dispatch: ThunkDispatch<RootState, unknown, Action> = useDispatch();
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { trainingHistory, workoutStats, isLoading } = useSelector((state: RootState) => state.training);
-
+  type RootStackParamList = {
+    WorkoutAnalysis: undefined;
+  };
+  
   useEffect(() => {
     async function fetchData() {
       try {
@@ -37,27 +41,29 @@ const WorkoutHistoryScreen = () => {
     fetchData();
   }, []);
 
-  // Function to format date
-// Perbaikan untuk formatDate dan item rendering
-const formatDate = (dateString: string | number | Date) => {
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  try {
-    // Cek apakah dateString valid
-    if (!dateString) return 'Tanggal tidak tersedia';
-    
-    const date = new Date(dateString);
-    
-    if (isNaN(date.getTime())) {
-      console.warn("Invalid date:", dateString);
+  const formatDate = (dateString: string | number | Date) => {
+    try {
+      // Cek apakah dateString valid
+      if (!dateString) return 'Tanggal tidak tersedia';
+      
+      const date = new Date(dateString);
+      
+      if (isNaN(date.getTime())) {
+        console.warn("Invalid date:", dateString);
+        return 'Tanggal tidak valid';
+      }
+      
+      // Format tanggal ke bentuk yang lebih bacaan
+      return date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch (error) {
+      console.error("Error parsing date:", dateString, error);
       return 'Tanggal tidak valid';
     }
-    
-    return date.toLocaleDateString('id-ID', options);
-  } catch (error) {
-    console.error("Error parsing date:", dateString, error);
-    return 'Tanggal tidak valid';
-  }
-};
+  };
 
   if (isLoading) {
     return (

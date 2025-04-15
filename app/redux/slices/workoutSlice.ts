@@ -42,6 +42,18 @@ export const getAllWorkouts = createAsyncThunk("training/getAllWorkouts", async 
   }
 });
 
+export const getAllWorkoutCategories = createAsyncThunk(
+  "workout/getAllWorkoutCategories",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await workoutService.getAllWorkoutCategories()
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.message)
+    }
+  }
+)
+
 // Get workout detail
 export const getWorkoutDetail = createAsyncThunk(
   "training/getWorkoutDetail",
@@ -139,15 +151,102 @@ export const getWorkoutRecommendations = createAsyncThunk(
   }
 );
 
-// Get workout statistics
+
+// Tambahkan fungsi helper untuk menghitung stats dari data history
+const calculateWorkoutStats = (trainingHistory: any[]) => {
+  // Default values kalau history kosong
+  if (!trainingHistory || trainingHistory.length === 0) {
+    return {
+      total_workouts: 0,
+      total_calories_burned: 0,
+      total_duration: 0,
+      avg_heart_rate: 0,
+      current_streak: 0,
+      avg_intensity: 0,
+    };
+  }
+
+  // Hitung total workouts
+  const total_workouts = trainingHistory.length;
+
+  // Hitung total kalori yang dibakar (periksa berbagai nama properti yang mungkin)
+  const total_calories_burned = trainingHistory.reduce((sum, workout) => {
+    const calories = workout.calories_burned || workout.kalori_dibakar || 0;
+    return sum + Number(calories);
+  }, 0);
+
+  // Hitung total durasi latihan
+  const total_duration = trainingHistory.reduce((sum, workout) => {
+    const duration = workout.duration || workout.waktu_latihan || 0;
+    return sum + Number(duration);
+  }, 0);
+
+  // Hitung rata-rata detak jantung
+  const heart_rates = trainingHistory
+    .map(workout => workout.heart_rate || workout.denyut_jantung || 0)
+    .filter(rate => rate > 0);
+  const avg_heart_rate = heart_rates.length > 0
+    ? heart_rates.reduce((sum, rate) => sum + Number(rate), 0) / heart_rates.length
+    : 0;
+
+  // Menghitung current streak (latihan berturut-turut)
+  let current_streak = 0;
+  if (trainingHistory.length > 0) {
+    // Urutkan riwayat berdasarkan tanggal
+    const sortedHistory = [...trainingHistory].sort((a, b) => {
+      const dateA = new Date(a.date || a.tgl_latihan || a.tanggal || 0);
+      const dateB = new Date(b.date || b.tgl_latihan || b.tanggal || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    // Implementasi sederhana untuk mendeteksi streak
+    current_streak = 1; // Minimal 1 jika ada riwayat latihan
+    const today = new Date();
+    const oneDay = 24 * 60 * 60 * 1000; // Milidetik dalam sehari
+
+    for (let i = 1; i < sortedHistory.length; i++) {
+      const prevDate = new Date(sortedHistory[i - 1].date || sortedHistory[i - 1].tgl_latihan || sortedHistory[i - 1].tanggal);
+      const currDate = new Date(sortedHistory[i].date || sortedHistory[i].tgl_latihan || sortedHistory[i].tanggal);
+      const diffDays = Math.round(Math.abs((prevDate.getTime() - currDate.getTime()) / oneDay));
+
+      if (diffDays === 1) {
+        current_streak++;
+      } else {
+        break;
+      }
+    }
+  }
+
+  // Untuk avg_intensity, kita bisa mengestimasi berdasarkan heart_rate
+  // Asumsi intensitas maksimal adalah 100% dan terjadi pada heart_rate 180 bpm
+  const avg_intensity = avg_heart_rate > 0 ? Math.round((avg_heart_rate / 180) * 100) : 0;
+
+  return {
+    total_workouts,
+    total_calories_burned: Math.round(total_calories_burned),
+    total_duration: Math.round(total_duration),
+    avg_heart_rate: Math.round(avg_heart_rate),
+    current_streak,
+    avg_intensity,
+  };
+};
+
+//// Ubah thunk untuk getWorkoutStats
 export const getWorkoutStats = createAsyncThunk(
-  "training/getWorkoutStats",
-  async (_, { rejectWithValue }) => {
+  "workout/getWorkoutStats",
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const response = await workoutService.getWorkoutStats();
-      return response.data.data || {};
+      // Ambil data history dari state
+      const state = getState() as { training: TrainingState };
+      const trainingHistory = state.training.trainingHistory;
+
+      // Hitung stats berdasarkan data history
+      const calculatedStats = calculateWorkoutStats(trainingHistory);
+
+      return calculatedStats;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error("Error calculating workout stats:", error);
+      return rejectWithValue("Gagal menghitung statistik workout");
     }
   }
 );
@@ -203,6 +302,19 @@ const trainingSlice = createSlice({
       .addCase(getWorkoutDetail.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      // Get All Categories
+      .addCase(getAllWorkoutCategories.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(getAllWorkoutCategories.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.workoutCategories = action.payload
+      })
+      .addCase(getAllWorkoutCategories.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
       })
       // Log Workout
       .addCase(logWorkout.pending, (state) => {

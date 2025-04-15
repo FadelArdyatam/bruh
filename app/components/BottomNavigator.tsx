@@ -47,9 +47,9 @@ const CustomBottomNavigation: React.FC<CustomBottomNavigationProps> = ({
                   label: 'IMT',
                   icon: (color: string) => <BarChart3 size={22} color={color} />
                 };
-              case 'TrainingProgramTab':
+              case 'WorkoutTab':
                 return {
-                  label: 'Training',
+                  label: 'Workout',
                   icon: (color: string) => <Dumbbell size={22} color={color} />
                 };
               case 'ProfileTab':
@@ -64,11 +64,11 @@ const CustomBottomNavigation: React.FC<CustomBottomNavigationProps> = ({
                 };
             }
           };
-          
+
           const tabConfig = getTabConfig();
           // Warna ikon: putih jika tab aktif, abu-abu jika tidak aktif
           const iconColor = isFocused ? "#000" : "#95979D";
-          
+
           return (
             <TouchableOpacity
               key={index}

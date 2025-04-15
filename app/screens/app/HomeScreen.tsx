@@ -163,47 +163,48 @@ const count = Array.isArray(trainingHistory) ? trainingHistory.length : 0;
 
   const chartData = prepareChartData()
 
-  // Recent activities
-  const getRecentActivities = () => {
-    const activities: { type: string; date: Date; value?: number; unit?: string; name?: any; duration?: any; calories?: any }[] = [];
+ // Recent activities
+const getRecentActivities = () => {
+  const activities: { type: string; date: Date; value?: number; unit?: string; name?: any; duration?: any; calories?: any }[] = [];
 
-    // Add recent weight entries
-    if (weightHistory && weightHistory.length > 0) {
-      const recentWeights = [...weightHistory]
-        .sort((a, b) => new Date(b.tgl_berat_badan).getTime() - new Date(a.tgl_berat_badan).getTime())
-        .slice(0, 2);
+  // Add recent weight entries
+  if (weightHistory && weightHistory.length > 0) {
+    const recentWeights = [...weightHistory]
+      .sort((a, b) => new Date(b.tgl_berat_badan).getTime() - new Date(a.tgl_berat_badan).getTime())
+      .slice(0, 2); // Ambil 2 berat terbaru
 
-      recentWeights.forEach(weight => {
-        activities.push({
-          type: 'weight',
-          date: new Date(weight.tgl_berat_badan),
-          value: weight.berat_badan,
-          unit: 'kg'
-        });
+    recentWeights.forEach(weight => {
+      activities.push({
+        type: 'weight',
+        date: new Date(weight.tgl_berat_badan),
+        value: weight.berat_badan,
+        unit: 'kg'
       });
-    }
+    });
+  }
 
-    // Add recent training sessions
-    if (trainingHistory && trainingHistory.length > 0) {
-      const recentTrainings = [...trainingHistory].slice(0, 2);
+  // Add recent training sessions
+  if (trainingHistory && trainingHistory.length > 0) {
+    const recentTrainings = [...trainingHistory]
+      .sort((a, b) => new Date(b.tgl_latihan).getTime() - new Date(a.tgl_latihan).getTime())
+      .slice(0, 3); // Ambil 3 latihan terbaru
 
-      recentTrainings.forEach(training => {
-        activities.push({
-          type: 'training',
-          date: new Date(training.date),
-          name: training.workout_name,
-          duration: training.duration,
-          calories: training.calories_burned
-        });
+    recentTrainings.forEach(training => {
+      activities.push({
+        type: 'training',
+        date: new Date(training.tgl_latihan),
+        name: training.nama_latihan,
+        duration: training.waktu_latihan,
+        calories: training.kalori_dibakar
       });
-    }
+    });
+  }
 
-    // Sort by date
-    return activities.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 3);
-  };
+  // Sort by date
+  return activities.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5); // Ambil 5 aktivitas terbaru
+};
 
-  const recentActivities = getRecentActivities();
-
+const recentActivities = getRecentActivities();
   // Function to format date
   const formatDate = (date: Date) => {
     const now = new Date();
@@ -472,85 +473,85 @@ const count = Array.isArray(trainingHistory) ? trainingHistory.length : 0;
             )}
 
             {/* Recent Activities */}
-            <View style={[
-              styles.card,
-              { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
+<View style={[
+  styles.card,
+  { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
+]}>
+  <Text variant='medium' size={18} style={[
+    { color: darkMode ? theme.text.onDark : theme.text.primary }
+  ]}>
+    Aktivitas Terbaru
+  </Text>
+
+  {recentActivities.length > 0 ? (
+    recentActivities.map((activity, index) => (
+      <View
+        key={index}
+        style={[
+          styles.activityItem,
+          {
+            borderBottomWidth: index < recentActivities.length - 1 ? 1 : 0,
+            borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          }
+        ]}
+      >
+        <View style={[
+          styles.activityIconContainer,
+          { backgroundColor: `${theme.primary}20` }
+        ]}>
+          {activity.type === 'weight' ? (
+            <TrendingUp size={24} color={theme.primary} />
+          ) : (
+            <Activity size={24} color={theme.primary} />
+          )}
+        </View>
+
+        <View style={styles.activityInfo}>
+          <Text variant="semiBold" style={[
+            { color: darkMode ? theme.text.onDark : theme.text.primary }
+          ]}>
+            {activity.type === 'weight'
+              ? `Berat Badan: ${activity.value} ${activity.unit}`
+              : `Latihan: ${activity.name}`
+            }
+          </Text>
+          <Text variant="regular" style={[
+            { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+          ]}>
+            {formatDate(activity.date)}
+          </Text>
+        </View>
+
+        {activity.type === 'training' && (
+          <View style={styles.activityStats}>
+            <Text style={[
+              styles.caloriesText,
+              { color: darkMode ? theme.text.onDark : theme.text.primary }
             ]}>
-              <Text variant='medium' size={18} style={[
-                { color: darkMode ? theme.text.onDark : theme.text.primary }
-              ]}>
-                Aktivitas Terbaru
-              </Text>
-
-              {recentActivities.length > 0 ? (
-                recentActivities.map((activity, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.activityItem,
-                      {
-                        borderBottomWidth: index < recentActivities.length - 1 ? 1 : 0,
-                        borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                      }
-                    ]}
-                  >
-                    <View style={[
-                      styles.activityIconContainer,
-                      { backgroundColor: `${theme.primary}20` }
-                    ]}>
-                      {activity.type === 'weight' ? (
-                        <TrendingUp size={24} color={theme.primary} />
-                      ) : (
-                        <Activity size={24} color={theme.primary} />
-                      )}
-                    </View>
-
-                    <View style={styles.activityInfo}>
-                      <Text variant="semiBold" style={[
-                        { color: darkMode ? theme.text.onDark : theme.text.primary }
-                      ]}>
-                        {activity.type === 'weight'
-                          ? `Berat Badan: ${activity.value} ${activity.unit}`
-                          : `Latihan: ${activity.name}`
-                        }
-                      </Text>
-                      <Text variant="regular" style={[
-                        { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
-                      ]}>
-                        {formatDate(activity.date)}
-                      </Text>
-                    </View>
-
-                    {activity.type === 'training' && (
-                      <View style={styles.activityStats}>
-                        <Text style={[
-                          styles.caloriesText,
-                          { color: darkMode ? theme.text.onDark : theme.text.primary }
-                        ]}>
-                          {Math.round(activity.calories)} kal
-                        </Text>
-                        <Text style={[
-                          styles.durationText,
-                          { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
-                        ]}>
-                          {activity.duration} min
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                ))
-              ) : (
-                <View style={styles.emptyActivities}>
-                  <History size={40} color={darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
-                  <Text style={[
-                    styles.emptyText,
-                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
-                  ]}>
-                    Belum ada aktivitas terbaru
-                  </Text>
-                </View>
-              )}
-            </View>
+              {Math.round(activity.calories)} kal
+            </Text>
+            <Text style={[
+              styles.durationText,
+              { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+            ]}>
+              {activity.duration} min
+            </Text>
+          </View>
+        )}
+      </View>
+    ))
+  ) : (
+    <View style={styles.emptyActivities}>
+      <History size={40} color={darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
+      <Text style={[
+        styles.emptyText,
+        { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
+      ]}>
+        Belum ada aktivitas terbaru
+      </Text>
+    </View>
+  )}
+</View>
             <QuickMenu
               items={[
                 {
@@ -586,13 +587,6 @@ const count = Array.isArray(trainingHistory) ? trainingHistory.length : 0;
                   description: "Rencana diet personal & panduan nutrisi",
                   icon: "diet",
                   screenName: "DietPlan",
-                  showBorder: true
-                },
-                {
-                  title: "LogWorkout",
-                  description: "Log Workout",
-                  icon: "activity",
-                  screenName: "LogWorkout",
                   showBorder: true
                 },
                 {

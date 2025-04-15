@@ -17,7 +17,6 @@ import HomeScreen from "../screens/app/HomeScreen"
 import ProfileScreen from "../screens/app/ProfileScreen"
 import PersonalDataScreen from "../screens/app/PersonalDataScreen"
 import IMTScreen from "../screens/app/IMTScreen"
-import TrainingProgramScreen from "../screens/app/Workout/TrainingProgramScreen"
 import FoodRecallScreen from "../screens/app/Food/FoodRecallScreen"
 import SettingsScreen from "../screens/app/SettingsScreen"
 import ChangePasswordScreen from "../screens/app/ChangePasswordScreen"
@@ -63,11 +62,11 @@ const TabNavigator = () => {
           tabBarLabel: '',
         }}
       />
-      <Tab.Screen 
-        name="TrainingProgramTab" 
-        component={TrainingProgramScreen}
+      <Tab.Screen
+        name="WorkoutTab"
+        component={WorkoutScreen}
         options={{
-          tabBarLabel: 'Analytics',
+          tabBarLabel: '',
         }}
       />
       <Tab.Screen 
@@ -77,13 +76,7 @@ const TabNavigator = () => {
           tabBarLabel: '',
         }}
       />
-      <Tab.Screen
-        name="WorkoutTab"
-        component={WorkoutScreen}
-        options={{
-          tabBarLabel: '',
-        }}
-      />
+
     </Tab.Navigator>
   )
 }
