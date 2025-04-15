@@ -26,9 +26,13 @@ import ProfilePhotoEditScreen from "../screens/app/ProfilePhotoEditScreen"
 // Custom Navigation
 import CustomBottomNavigation from "../components/BottomNavigator"
 import DietScreen from "../screens/app/Diet/dietScreen"
-import WorkoutScreen from "../screens/app/Workout/WorkoutScreen"
-import WorkoutAnalysisScreen from "../screens/app/Workout/WorkoutAnalysisScreen"
+import WorkoutScreen from "../screens/app/WorkoutScreen"
+import WorkoutListScreen from "../screens/app/Workout/WorkoutListScreen"
+import WorkoutDetailScreen from "../screens/app/Workout/WorkoutDetailScreen"
+import LogWorkoutScreen from "../screens/app/Workout/LogWorkoutScreen"
 import WorkoutHistoryScreen from "../screens/app/Workout/WorkoutHistoryScreen"
+import WorkoutAnalysisScreen from "../screens/app/WorkoutAnalysisScreen"
+import WorkoutScheduleScreen from "../screens/app/Workout/WorkoutScheduleScreen"
 
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -128,6 +132,13 @@ const MainStackNavigator = () => {
       {/* Screen untuk jadwal latihan */}
 
       <MainStack.Screen name="DietPlan" component={DietScreen} />
+      <MainStack.Screen name="WorkoutList" component={WorkoutListScreen}/>
+      <MainStack.Screen name="WorkoutDetail" component={WorkoutDetailScreen}/>
+      <MainStack.Screen name="LogWorkout" component={LogWorkoutScreen}/>
+      <MainStack.Screen name="WorkoutHistory" component={WorkoutHistoryScreen}/>
+      <MainStack.Screen name="WorkoutAnalysis" component={WorkoutAnalysisScreen}/>
+      <MainStack.Screen name="WorkoutSchedule" component={WorkoutScheduleScreen}/>
+
     </MainStack.Navigator>
   )
 }

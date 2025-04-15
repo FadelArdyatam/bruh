@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkeletonCircle, SkeletonText, SkeletonBox } from '../SkeletonLoader';
 
@@ -9,45 +8,71 @@ const screenWidth = Dimensions.get('window').width;
 const IMTScreenSkeleton = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <LinearGradient colors={["#FFB800", "#FF8A00"]} style={styles.headerGradient}>
-          <SkeletonText width={240} height={24} />
-          
-          {/* Status IMT Ringkasan */}
-          <View style={styles.imtStatusCard}>
-            <View style={styles.imtStatusRow}>
-              <View>
-                <SkeletonText width={120} height={16} style={{ marginBottom: 8 }} />
-                <SkeletonText width={60} height={28} />
-              </View>
-              <SkeletonBox width={100} height={40} borderRadius={20} />
+      {/* Header Section */}
+      <View style={styles.header}>
+        <SkeletonText width={280} height={24} style={{ marginBottom: 20 }} />
+        
+        {/* IMT Status Card */}
+        <View style={styles.imtStatusCard}>
+          <SkeletonText width={120} height={16} style={{ marginBottom: 8 }} />
+          <View style={styles.imtStatusRow}>
+            <View>
+              <SkeletonText width={60} height={32} style={{ marginBottom: 4 }} />
+              <SkeletonText width={100} height={16} />
             </View>
+            <SkeletonBox width={100} height={40} borderRadius={8} />
           </View>
-        </LinearGradient>
+        </View>
       </View>
       
-      <View style={styles.content}>
-        {/* Kartu IMT Gauge */}
+      <View style={styles.mainContent}>
+        {/* IMT Gauge Card */}
         <View style={styles.card}>
           <SkeletonText width={140} height={20} style={{ marginBottom: 16 }} />
           
-          {/* IMT Gauge Display */}
+          {/* Gauge Container */}
           <View style={styles.gaugeContainer}>
             {/* IMT Value circle */}
-            <SkeletonCircle width={150} height={150} />
+            <SkeletonCircle width={150} height={150} style={{ marginBottom: 20 }} />
             
-            {/* Kategori IMT */}
-            <View style={styles.categoriesContainer}>
-              <SkeletonBox height={60} width="100%" borderRadius={12} style={{ marginTop: 20 }} />
+            {/* IMT Categories */}
+            <View style={styles.imtCategories}>
+              <View style={styles.categoryItem}>
+                <SkeletonBox width={4} height={20} borderRadius={2} style={{ marginBottom: 4 }} />
+                <SkeletonText width={30} height={12} style={{ marginBottom: 2 }} />
+                <SkeletonText width={40} height={12} />
+              </View>
+              <View style={styles.categoryItem}>
+                <SkeletonBox width={4} height={20} borderRadius={2} style={{ marginBottom: 4 }} />
+                <SkeletonText width={30} height={12} style={{ marginBottom: 2 }} />
+                <SkeletonText width={40} height={12} />
+              </View>
+              <View style={styles.categoryItem}>
+                <SkeletonBox width={4} height={20} borderRadius={2} style={{ marginBottom: 4 }} />
+                <SkeletonText width={30} height={12} style={{ marginBottom: 2 }} />
+                <SkeletonText width={40} height={12} />
+              </View>
+              <View style={styles.categoryItem}>
+                <SkeletonBox width={4} height={20} borderRadius={2} style={{ marginBottom: 4 }} />
+                <SkeletonText width={30} height={12} style={{ marginBottom: 2 }} />
+                <SkeletonText width={40} height={12} />
+              </View>
             </View>
             
-            <SkeletonBox height={40} width={200} borderRadius={20} style={{ marginTop: 16 }} />
+            {/* Info Button */}
+            <SkeletonBox width={120} height={36} borderRadius={8} style={{ marginTop: 16, alignSelf: 'center' }} />
           </View>
+          
+          {/* Info Container (Hidden initially) */}
+          <SkeletonBox width="100%" height={120} borderRadius={12} style={{ marginTop: 12, display: 'none' }} />
         </View>
         
-        {/* Grafik Berat Badan Card */}
+        {/* Weight Chart Card */}
         <View style={styles.card}>
-          <SkeletonText width={180} height={20} style={{ marginBottom: 12 }} />
+          <View style={styles.cardHeaderRow}>
+            <SkeletonText width={180} height={20} />
+            <SkeletonText width={60} height={16} />
+          </View>
           
           {/* Chart placeholder */}
           <SkeletonBox 
@@ -57,46 +82,44 @@ const IMTScreenSkeleton = () => {
             style={{ marginVertical: 12 }} 
           />
           
-          <SkeletonBox height={40} width="100%" borderRadius={20} style={{ marginTop: 12 }} />
-          
-          {/* Detail IMT collapsible section */}
-          <SkeletonBox height={120} width="100%" borderRadius={12} style={{ marginTop: 16 }} />
+          <SkeletonText width="80%" height={12} style={{ alignSelf: 'center', marginTop: 8 }} />
         </View>
 
-        {/* Input Berat Badan Card */}
+        {/* Input Weight Card */}
         <View style={styles.card}>
           <SkeletonText width={180} height={20} style={{ marginBottom: 16 }} />
 
-          <View style={styles.inputFields}>
+          <View style={styles.inputContainer}>
             {/* Berat Badan input */}
             <View style={styles.inputGroup}>
-              <SkeletonText width={120} height={16} style={{ marginBottom: 8 }} />
-              <SkeletonBox height={55} width="100%" borderRadius={30} />
+              <SkeletonText width={120} height={14} style={{ marginBottom: 8 }} />
+              <SkeletonBox height={52} width="100%" borderRadius={12} />
             </View>
 
             {/* Tanggal input */}
             <View style={styles.inputGroup}>
-              <SkeletonText width={80} height={16} style={{ marginBottom: 8 }} />
-              <SkeletonBox height={55} width="100%" borderRadius={30} />
+              <SkeletonText width={80} height={14} style={{ marginBottom: 8 }} />
+              <SkeletonBox height={52} width="100%" borderRadius={12} />
             </View>
 
             {/* Minggu Ke input */}
             <View style={styles.inputGroup}>
-              <SkeletonText width={100} height={16} style={{ marginBottom: 8 }} />
-              <SkeletonBox height={55} width="100%" borderRadius={30} />
+              <SkeletonText width={100} height={14} style={{ marginBottom: 8 }} />
+              <SkeletonBox height={52} width="100%" borderRadius={12} />
             </View>
           </View>
 
-          <SkeletonBox height={55} width="100%" borderRadius={30} style={{ marginTop: 24 }} />
+          {/* Save Button */}
+          <SkeletonBox height={52} width="100%" borderRadius={12} style={{ marginTop: 16 }} />
         </View>
         
-        {/* Menu Cepat Card */}
+        {/* Quick Menu Card */}
         <View style={styles.card}>
           <SkeletonText width={120} height={20} style={{ marginBottom: 16 }} />
           
-          {/* Quick links */}
-          <SkeletonBox height={80} width="100%" borderRadius={16} style={{ marginBottom: 16 }} />
-          <SkeletonBox height={80} width="100%" borderRadius={16} />
+          {/* Menu Items */}
+          <SkeletonBox height={72} width="100%" borderRadius={12} style={{ marginBottom: 12 }} />
+          <SkeletonBox height={72} width="100%" borderRadius={12} />
         </View>
       </View>
     </SafeAreaView>
@@ -108,56 +131,66 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  headerContainer: {
-    overflow: 'hidden',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
-  headerGradient: {
-    paddingTop: 16,
-    paddingBottom: 70,
+  header: {
     paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10
   },
   imtStatusCard: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 16,
+    backgroundColor: '#FFB800',
+    padding: 20,
     borderRadius: 16,
-    marginTop: 16,
+    marginBottom: 20,
   },
   imtStatusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  content: {
-    flex: 1,
-    marginTop: -50,
-    paddingHorizontal: 24,
+  mainContent: {
+    paddingHorizontal: 20
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 5,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16
   },
   gaugeContainer: {
+    backgroundColor: 'rgba(0,0,0,0.03)',
     alignItems: 'center',
     padding: 20,
+    borderRadius: 12,
+    marginTop: 12,
+    marginBottom: 16
   },
-  categoriesContainer: {
+  imtCategories: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     width: '100%',
+    marginBottom: 16
   },
-  inputFields: {
-    gap: 16,
+  categoryItem: {
+    alignItems: 'center',
+    flex: 1
+  },
+  inputContainer: {
+    marginTop: 16
   },
   inputGroup: {
-    marginBottom: 16,
-  },
+    marginBottom: 16
+  }
 });
 
 export default IMTScreenSkeleton;

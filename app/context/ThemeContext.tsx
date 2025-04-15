@@ -10,7 +10,7 @@ export const THEMES = {
     accent: '#FFC107',
     coklat: '#964b00',
     background: {
-      light: '#FFF9E6',
+      light: '#FFFFFF',
       card: '#FFFFFF',
       dark: '#1F1F1F',
     },

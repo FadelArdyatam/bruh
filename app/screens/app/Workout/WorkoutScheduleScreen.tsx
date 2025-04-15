@@ -11,12 +11,12 @@ import {
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
-import type { AppDispatch, RootState } from "../../redux/store"
+import type { AppDispatch, RootState } from "../../../redux/store"
 import {
   getAllWorkoutSchedules,
   deleteWorkoutSchedule,
-} from "../../redux/slices/workoutScheduleSlice"
-import { getAllWorkouts } from "../../redux/slices/workoutSlice"
+} from "../../../redux/slices/workoutScheduleSlice"
+import { getAllWorkouts } from "../../../redux/slices/workoutSlice"
 import {
   ArrowLeft,
   Plus,

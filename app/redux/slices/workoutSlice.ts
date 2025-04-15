@@ -1,8 +1,9 @@
 // app/redux/slices/trainingSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 import workoutService from "../../services/workoutService"
+import trainingService from "~/app/services/trainingService";
 
-interface TrainingState {
+export interface TrainingState {
   workoutList: any[];
   selectedWorkout: any | null;
   trainingHistory: any[];
@@ -11,11 +12,13 @@ interface TrainingState {
   workoutRecommendations: any;
   workoutStats: any;
   workoutAnalysis: any;
+  workoutCategories: any[];
   isLoading: boolean;
   error: string | null;
+  WorkoutDetail: { workoutId: number };
 }
 
-const initialState: TrainingState = {
+export const initialState: TrainingState = {
   workoutList: [],
   selectedWorkout: null,
   trainingHistory: [],
@@ -23,9 +26,11 @@ const initialState: TrainingState = {
   todayWorkouts: [],
   workoutRecommendations: null,
   workoutStats: null,
+  workoutCategories: [],
   workoutAnalysis: null,
   isLoading: false,
   error: null,
+  WorkoutDetail: { workoutId: 0 },
 }
 
 // Get all workouts
@@ -33,6 +38,15 @@ export const getAllWorkouts = createAsyncThunk("training/getAllWorkouts", async 
   try {
     const response = await workoutService.getAllWorkouts()
     return response.data
+  } catch (error: any) {
+    return rejectWithValue(error.message)
+  }
+})
+
+export const getAllWorkoutCategories = createAsyncThunk("training/getAllWorkoutCategories", async (_, { rejectWithValue }) => {
+  try {
+  const response = await workoutService.getAllWorkoutCategories()
+  return response.data
   } catch (error: any) {
     return rejectWithValue(error.message)
   }

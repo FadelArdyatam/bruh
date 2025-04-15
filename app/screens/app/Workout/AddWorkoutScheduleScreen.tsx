@@ -15,9 +15,9 @@ import {
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useDispatch, useSelector } from "react-redux"
-import type { AppDispatch, RootState } from "../../redux/store"
-import { createWorkoutSchedule } from "../../redux/slices/workoutScheduleSlice"
-import { getAllWorkouts } from "../../redux/slices/workoutSlice"
+import type { AppDispatch, RootState } from "../../../redux/store"
+import { createWorkoutSchedule } from "../../../redux/slices/workoutScheduleSlice"
+import { getAllWorkouts } from "../../../redux/slices/workoutSlice"
 import { ArrowLeft, Check, Clock, Bell } from "lucide-react-native"
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
@@ -26,6 +26,7 @@ import DateTimePicker from "@react-native-community/datetimepicker"
 import { LinearGradient } from "expo-linear-gradient"
 import ScreenHeader from "~/app/components/ScreenHeader"
 import SaveButton from "~/app/components/SaveButton"
+
 
 // Array nama hari dalam bahasa Indonesia
 const HARI = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"]
@@ -37,10 +38,20 @@ type RouteParams = {
   };
 };
 
+type RootStackParamList = {
+  AddWorkoutSchedule: {
+    selectedWorkoutId: number;
+    selectedDay?: string;
+  };
+  // Add other screens as needed
+};
+
+
+
 const AddWorkoutScheduleScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const navigation = useNavigation<StackNavigationProp<any>>()
-  const route = useRoute<RouteProp<RouteParams, "AddWorkoutSchedule">>()
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'AddWorkoutSchedule'>>();
   
   const { selectedDay = "senin" } = route.params || {}
   const { workoutList, isLoading: workoutsLoading } = useSelector((state: RootState) => state.training)

@@ -78,6 +78,19 @@ const getWorkoutHistory = async () => {
   }
 }
 
+const getAllWorkoutCategories = async () => {
+  try{
+    const response = await api.get("/workout-categories")
+    return response.data
+  }catch (error: any){
+    if(error.response){
+      throw new Error(error.response.data.message || "Failed to fetch workout categories")
+    }
+    throw new Error("Network error. Please check your connection." )
+  }
+}
+
+
 // Get workout schedule
 const getWorkoutSchedule = async () => {
   try {
@@ -166,6 +179,7 @@ const workoutService = {
   getTodayWorkouts,
   getWorkoutRecommendations,
   getWorkoutStats,
+  getAllWorkoutCategories,
   getWorkoutAnalysis,
 }
 

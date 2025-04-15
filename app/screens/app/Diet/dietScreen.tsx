@@ -32,6 +32,7 @@ import { LineChart } from "react-native-chart-kit"
 import { Dimensions } from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { LinearGradient } from "expo-linear-gradient"
+import Header from "~/app/components/HeaderComponents"
 
 const screenWidth = Dimensions.get("window").width
 
@@ -195,19 +196,26 @@ const DietScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
-        <LinearGradient colors={["#FFB800", "#FF8A00"]} style={styles.headerGradient}>
-          <Text style={styles.headerTitle}>RENCANA DIET</Text>
+        <View style={styles.headerGradient}>
+        <Header
+              title="Workout Schedule"
+              backgroundColor="#FFFFFF"
+              textColor="#000000"
+              showBackButton={true}
+              showRightIcon={true}
+              rightIconType="more"
+            />
           
           {!activeDietPlan && !showCreateForm && (
             <TouchableOpacity 
               style={styles.createButton}
               onPress={() => setShowCreateForm(true)}
             >
-              <Plus size={20} color="#FFF" />
+              <Plus size={20} color="#FFB800" />
               <Text style={styles.createButtonText}>Buat Rencana Diet</Text>
             </TouchableOpacity>
           )}
-        </LinearGradient>
+        </View>
       </View>
 
       <ScrollView 
@@ -560,7 +568,7 @@ const styles = StyleSheet.create({
     borderRadius: 24
   },
   createButtonText: {
-    color: '#FFFFFF',
+    color: '#FFFFF',
     marginLeft: 8,
     fontWeight: '500'
   },

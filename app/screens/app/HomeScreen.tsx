@@ -25,6 +25,7 @@ import { useTheme } from "../../context/ThemeContext"
 import { LineChart } from "react-native-chart-kit"
 import { HomeScreenSkeleton } from "~/app/components/SkeletonLoaders"
 import Text from "~/app/components/Typography/Text"
+import QuickMenu from "~/app/components/QuickMenu"
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -36,7 +37,7 @@ const HomeScreen = () => {
   const { weightHistory, isLoading: weightLoading } = useSelector((state: RootState) => state.imt)
   const { trainingHistory, isLoading: trainingLoading } = useSelector((state: RootState) => state.training)
   const { theme, darkMode } = useTheme()
-  
+
   const [greeting, setGreeting] = useState("")
 
   useEffect(() => {
@@ -56,13 +57,13 @@ const HomeScreen = () => {
       // Refresh data saat screen mendapatkan fokus
       dispatch(getWeightData());
       dispatch(getUserProfile());
-      
+
       return () => {
         // cleanup jika diperlukan
       };
     }, [])
   );
-  
+
   // Helper function to get person data
   const getPersonelData = () => {
     if (!personalData) return null
@@ -72,12 +73,12 @@ const HomeScreen = () => {
   // Mendapatkan berat badan terbaru (berdasarkan tanggal)
   const getLatestWeight = () => {
     if (weightHistory.length === 0) return null;
-    
+
     // Urutkan data berdasarkan tanggal (terbaru di urutan pertama)
     const sortedData = [...weightHistory].sort(
       (a, b) => new Date(b.tgl_berat_badan).getTime() - new Date(a.tgl_berat_badan).getTime()
     );
-    
+
     // Ambil berat badan dari data terurut pertama (terbaru)
     return sortedData[0].berat_badan;
   }
@@ -106,14 +107,14 @@ const HomeScreen = () => {
   const imtData = calculateIMT()
   const personelData = getPersonelData()
   const latestWeight = getLatestWeight();
-  
+
   // Determine if the screen is still loading data
   const isLoading = profileLoading || weightLoading || trainingLoading;
-  
+
   // If any data is still loading and we don't have cached data, show skeleton
   if (isLoading || (!personalData || weightHistory.length === 0)) {
     return <HomeScreenSkeleton />;
-  }  
+  }
 
   // Prepare weight history data for chart
   const prepareChartData = () => {
@@ -146,7 +147,7 @@ const HomeScreen = () => {
   const calculateChartWidth = (dataPoints: number) => {
     // Minimal lebar per titik data (dapat disesuaikan)
     const minWidthPerPoint = 50;
-    
+
     // Hitung lebar berdasarkan jumlah titik data, minimal sama dengan lebar layar
     return Math.max(screenWidth - 40, dataPoints * minWidthPerPoint);
   }
@@ -249,7 +250,7 @@ const HomeScreen = () => {
               </View>
               <TouchableOpacity
                 onPress={() => handleNavigation("ProfileTab")}
-                style={[styles.avatarButton, {backgroundColor: theme.primary}]}
+                style={[styles.avatarButton, { backgroundColor: theme.primary }]}
               >
                 <User size={24} color="#FFFFFF" />
               </TouchableOpacity>
@@ -411,11 +412,11 @@ const HomeScreen = () => {
                 { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
               ]}>
                 <View style={styles.cardHeaderRow}>
-                <Text variant='medium' size={18} style={[
-                { color: darkMode ? theme.text.onDark : theme.text.primary }
-              ]}>
-                Tren Berat Badan
-              </Text>
+                  <Text variant='medium' size={18} style={[
+                    { color: darkMode ? theme.text.onDark : theme.text.primary }
+                  ]}>
+                    Tren Berat Badan
+                  </Text>
                   <TouchableOpacity onPress={() => handleNavigation("IMTTab")}>
                     <Text style={{ color: theme.primary }}>Lihat Semua</Text>
                   </TouchableOpacity>
@@ -541,147 +542,60 @@ const HomeScreen = () => {
                 </View>
               )}
             </View>
+            <QuickMenu
+              items={[
+                {
+                  title: "Indeks Massa Tubuh",
+                  description: "Pantau IMT dan berat badan Anda",
+                  icon: "chart",
+                  screenName: "IMTTab",
+                  showBorder: true
+                },
+                {
+                  title: "Program Latihan",
+                  description: "Pilih dan lakukan latihan kebugaran",
+                  icon: "activity",
+                  screenName: "TrainingProgramTab",
+                  showBorder: true
+                },
+                {
+                  title: "List Latihan",
+                  description: "Pilih dan lakukan latihan kebugaran",
+                  icon: "activity",
+                  screenName: "WorkoutList",
+                  showBorder: true
+                },
+                {
+                  title: "Recall Makan",
+                  description: "Catat asupan makanan harian Anda",
+                  icon: "food",
+                  screenName: "FoodRecall",
+                  showBorder: true
+                },
+                {
+                  title: "Diet Plan",
+                  description: "Rencana diet personal & panduan nutrisi",
+                  icon: "diet",
+                  screenName: "DietPlan",
+                  showBorder: true
+                },
+                {
+                  title: "LogWorkout",
+                  description: "Log Workout",
+                  icon: "activity",
+                  screenName: "LogWorkout",
+                  showBorder: true
+                },
+                {
+                  title: "Workout History",
+                  description: "Workout History",
+                  icon: "activity",
+                  screenName: "WorkoutHistory",
+                  showBorder: false
+                },
 
-            {/* Quick Access Menu */}
-            <View style={[
-              styles.card,
-              { backgroundColor: darkMode ? theme.background.dark : theme.background.card }
-            ]}>
-              <Text variant='medium' size={18} style={[
-                { color: darkMode ? theme.text.onDark : theme.text.primary }
-              ]}>
-                Menu Cepat
-              </Text>
-
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    borderBottomWidth: 1,
-                    borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                  }
-                ]}
-                onPress={() => handleNavigation("IMTTab")}
-              >
-                <View style={[
-                  styles.menuIconContainer,
-                  { backgroundColor: `${theme.primary}20` }
-                ]}>
-                  <BarChart2 size={24} color={theme.primary} />
-                </View>
-                <View style={styles.menuTextContainer}>
-                  <Text variant="bold" >
-                    Indeks Massa Tubuh
-                  </Text>
-                  <Text style={[
-                    styles.menuDescription,
-                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
-                  ]}>
-                    Pantau IMT dan berat badan Anda
-                  </Text>
-                </View>
-                <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    borderBottomWidth: 1,
-                    borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                  }
-                ]}
-                onPress={() => handleNavigation("TrainingProgramTab")}
-              >
-                <View style={[
-                  styles.menuIconContainer,
-                  { backgroundColor: `${theme.secondary}20` }
-                ]}>
-                  <Activity size={24} color={theme.secondary} />
-                </View>
-                <View style={styles.menuTextContainer}>
-                  <Text style={[
-                    styles.menuTitle,
-                    { color: darkMode ? theme.text.onDark : theme.text.primary }
-                  ]}>
-                    Program Latihan
-                  </Text>
-                  <Text style={[
-                    styles.menuDescription,
-                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
-                  ]}>
-                    Pilih dan lakukan latihan kebugaran
-                  </Text>
-                </View>
-                <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    borderBottomWidth: 1,
-                    borderBottomColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                  }
-                ]}
-                onPress={() => handleNavigation("FoodRecall")}
-              >
-                <View style={[
-                  styles.menuIconContainer,
-                  { backgroundColor: `${theme.accent}20` }
-                ]}>
-                  <Image
-                    source={{ uri: "https://cdn-icons-png.flaticon.com/512/2771/2771406.png" }}
-                    style={styles.menuIcon}
-                  />
-                </View>
-                <View style={styles.menuTextContainer}>
-                  <Text style={[
-                    styles.menuTitle,
-                    { color: darkMode ? theme.text.onDark : theme.text.primary }
-                  ]}>
-                    Recall Makan
-                  </Text>
-                  <Text style={[
-                    styles.menuDescription,
-                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
-                  ]}>
-                    Catat asupan makanan harian Anda
-                  </Text>
-                </View>
-                <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => handleNavigation("DietPlan")}
-              >
-                <View style={[
-                  styles.menuIconContainer,
-                  { backgroundColor: `${theme.primary}20` }
-                ]}>
-                  <Image
-                    source={{ uri: "https://cdn-icons-png.flaticon.com/512/706/706164.png" }}
-                    style={styles.menuIcon}
-                  />
-                </View>
-                <View style={styles.menuTextContainer}>
-                  <Text style={[
-                    styles.menuTitle,
-                    { color: darkMode ? theme.text.onDark : theme.text.primary }
-                  ]}>
-                    Diet Plan
-                  </Text>
-                  <Text style={[
-                    styles.menuDescription,
-                    { color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }
-                  ]}>
-                    Rencana diet personal & panduan nutrisi
-                  </Text>
-                </View>
-                <ChevronRight size={20} color={darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
-              </TouchableOpacity>
-            </View>
+              ]}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
